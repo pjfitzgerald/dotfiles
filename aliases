@@ -5,3 +5,9 @@ alias speedtest="wget -O /dev/null http://speedtest.wdc01.softlayer.com/download
 
 # Quickly serve the current directory as HTTP
 alias serve='ruby -run -e httpd . -p 8000'  # Or python -m SimpleHTTPServer :)
+alias code='GTK_IM_MODULE=xim code'
+alias gtd='~/Dropbox/org'
+alias projects='~/code/pjfitzgerald/projects'
+alias gtdwwia='~/gtd/structure/projects/active/wwia'
+alias uni='~/Documents/uni/2020/sem1'
+alias eclipse='~/eclipse-workspace/project'
