@@ -16,6 +16,10 @@ unalias rm # No interactive rm by default (brought by plugins/common-aliases)
 
 # Load rbenv if installed
 export PATH="${HOME}/.rbenv/bin:${PATH}"
+export PATH=$PATH:/home/patrick/.rbenv/versions/2.6.5/bin 
+export PATH=$PATH:/opt/leiningen/lein.sh
+export PATH=$PATH:~/.local/bin
+
 type -a rbenv > /dev/null && eval "$(rbenv init -)"
 
 # Rails and Ruby uses the local `bin` folder to store binstubs.
@@ -39,3 +43,13 @@ export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
+
+
+# osascript is apple script, so the below only works on macOS
+notify() {
+  osascript -e "display notification \"$1\" with title \"Terminal\""
+}# Install Ruby Gems to ~/gems
+export GEM_HOME="$HOME/gems"
+export PATH="$HOME/gems/bin:$PATH"
+
+[ -f "/home/patrick/.ghcup/env" ] && source "/home/patrick/.ghcup/env" # ghcup-env
