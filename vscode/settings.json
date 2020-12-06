@@ -1,0 +1,19 @@
+{
+    "explorer.confirmDelete": false,
+    "editor.tabSize": 2,
+    "emmet.includeLanguages": {
+        "erb": "html",
+        "markdown": "html"
+    },
+    "highlight-matching-tag.enabled": true,
+    "window.zoomLevel": 0,
+    "editor.formatOnPaste": true,
+    "editor.wordWrap": "on",
+    "workbench.editor.enablePreview": false,
+    "explorer.confirmDragAndDrop": false,
+    "workbench.statusBar.visible": true,
+    "explorer.autoReveal": false,
+    "workbench.startupEditor": "newUntitledFile",
+    "editor.snippetSuggetions": "none",
+    "workbench.activityBar.visible": true
+}
