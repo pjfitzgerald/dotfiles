@@ -16,3 +16,5 @@ alias 2102tutes='~/Documents/uni/2020/sem2/FIT2102/FIT2102_team56'
 alias forkify='/home/patrick/code/pjfitzgerald/projects/udemy_js/forkify'
 alias pong='~/Documents/uni/2020/sem2/FIT2102/assignment1/Assignment_1_2020/frp_pong'
 alias ghci="stack ghci"
+alias a2="~/Documents/uni/2020/sem2/FIT2102/assignment2/gin_rummy"
+

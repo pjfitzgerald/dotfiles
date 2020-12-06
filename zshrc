@@ -46,10 +46,10 @@ export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 
 
 # osascript is apple script, so the below only works on macOS
-notify() {
-  osascript -e "display notification \"$1\" with title \"Terminal\""
-}# Install Ruby Gems to ~/gems
-export GEM_HOME="$HOME/gems"
-export PATH="$HOME/gems/bin:$PATH"
+#notify() {
+#  osascript -e "display notification \"$1\" with title \"Terminal\""
+#}# Install Ruby Gems to ~/gems
+#export GEM_HOME="$HOME/gems"
+#export PATH="$HOME/gems/bin:$PATH"
 
 [ -f "/home/patrick/.ghcup/env" ] && source "/home/patrick/.ghcup/env" # ghcup-env
