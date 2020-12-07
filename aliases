@@ -5,16 +5,11 @@ alias speedtest="wget -O /dev/null http://speedtest.wdc01.softlayer.com/download
 
 # Quickly serve the current directory as HTTP
 alias serve='ruby -run -e httpd . -p 8000'  # Or python -m SimpleHTTPServer :)
-alias code='GTK_IM_MODULE=xim code'
 alias gtd='~/Dropbox/gtd'
-alias projects='~/code/pjfitzgerald/projects'
+alias projects='~/code/projects'
+alias dotfiles='~/code/dotfiles'
 alias gtdwwia='~/gtd/structure/projects/active/wwia'
-alias uni='~/Documents/uni/2020/sem1'
 alias eclipse='~/eclipse-workspace/project'
-alias 2102='~/Documents/uni/2020/sem2/FIT2102'
-alias 2102tutes='~/Documents/uni/2020/sem2/FIT2102/FIT2102_team56'
 alias forkify='/home/patrick/code/pjfitzgerald/projects/udemy_js/forkify'
-alias pong='~/Documents/uni/2020/sem2/FIT2102/assignment1/Assignment_1_2020/frp_pong'
 alias ghci="stack ghci"
-alias a2="~/Documents/uni/2020/sem2/FIT2102/assignment2/gin_rummy"
 

@@ -1,3 +1,4 @@
+ZSH_DISABLE_COMPFIX=true
 ZSH=$HOME/.oh-my-zsh
 
 # You can change the theme with another one:
