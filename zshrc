@@ -53,3 +53,4 @@ export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 #export PATH="$HOME/gems/bin:$PATH"
 
 [ -f "/home/patrick/.ghcup/env" ] && source "/home/patrick/.ghcup/env" # ghcup-env
+export BUNDLER_EDITOR="'/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl' -a"
