@@ -12,4 +12,9 @@ alias gtdwwia='~/gtd/structure/projects/active/wwia'
 alias eclipse='~/eclipse-workspace/project'
 alias forkify='/home/patrick/code/pjfitzgerald/projects/udemy_js/forkify'
 alias ghci="stack ghci"
-
+alias youtube="~/Movies/youtube"
+alias pkm="~/pkm"
+alias pkmsec="~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/pkm-secondary_icloud"
+alias gpodder="/Users/patrickfitzgerald/Library/Application\ Support/gPodder/Downloads"
+alias youtube-archiver="/Users/patrickfitzgerald/code/scripts/youtube_archiver"
+# alias gitsync='~/code/dotfiles/git-syncpkm'

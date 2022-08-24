@@ -49,3 +49,5 @@
 [user]
 	email = patrick.fitzgerald29@gmail.com
 	name = patrickfitzgerald
+[init]
+	defaultBranch = master
