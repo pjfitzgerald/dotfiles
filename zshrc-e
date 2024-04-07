@@ -53,13 +53,11 @@ export BUNDLER_EDITOR="subl $@ >/dev/null 2>&1 -a"
 #export GEM_HOME="$HOME/gems"
 #export PATH="$HOME/gems/bin:$PATH"
 
-#[ -f "/home/patrick/.ghcup/env" ] && source "/home/patrick/.ghcup/env" # ghcup-env
+[ -f "/home/patrick/.ghcup/env" ] && source "/home/patrick/.ghcup/env" # ghcup-env
 export BUNDLER_EDITOR="'/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl' -a"
 
 # add scripts to PATH (incl git syncing for pkm vaults)
-export PATH=$PATH:/Users/patrickfitzgerald/cs/scripts
+export PATH=$PATH:/Users/patrickfitzgerald/code/scripts
 
 # attempt to get the `psql` command to work in terminal after installing postgresql@15 via homebrew
 export PATH=$PATH:/usr/local/var/postgresql@15export PATH="/usr/local/opt/libpq/bin:$PATH"
-
-[ -f "/Users/patrickfitzgerald/.ghcup/env" ] && source "/Users/patrickfitzgerald/.ghcup/env" # ghcup-env
