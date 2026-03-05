@@ -18,6 +18,10 @@
 !bin/
 !bin/**
 
+# Shell config
+!zshrc
+!install.sh
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/
