@@ -505,6 +505,7 @@ require('lazy').setup({
         --
         defaults = {
           layout_strategy = 'vertical',
+          file_ignore_patterns = { '%.git/', 'node_modules/' },
           -- PJF: make all Telescope searches case-insensitive
           vimgrep_arguments = {
             'rg', '--color=never', '--no-heading', '--with-filename',
@@ -531,7 +532,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', function()
-        builtin.find_files { hidden = true, no_ignore = true, file_ignore_patterns = { '%.git/', 'node_modules/' } }
+        builtin.find_files { hidden = true, no_ignore = true }
       end, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
