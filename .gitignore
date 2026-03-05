@@ -1,0 +1,31 @@
+# Ignore everything by default, then whitelist what we track
+*
+
+# Config files we want to track
+!.gitignore
+!.gitattributes
+!CLAUDE.md
+
+# Neovim config
+!nvim/
+!nvim/**
+
+# Tmux config
+!tmux/
+!tmux/**
+
+# Ignore nvim artifacts and nested git
+nvim/.git/
+nvim/.git.bak/
+nvim/.github/
+nvim/.luarc.json
+nvim/spell/
+nvim/lazy-lock.json
+nvim/tags
+nvim/test.sh
+
+# Ignore nvim backup
+nvim.bak.*
+
+# Ignore github-copilot secrets
+github-copilot/
