@@ -29,9 +29,9 @@ create_layout() {
   tmux split-window -h -t "$target" -l 65% -c "$dir"
   tmux split-window -v -t "$target.1" -l 50% -c "$dir"
 
-  tmux set-option -p -t "$target.1" @label 'claude'
-  tmux set-option -p -t "$target.2" @label 'terminal'
-  tmux set-option -p -t "$target.3" @label 'nvim'
+  tmux select-pane -t "$target.1" -T 'claude'
+  tmux select-pane -t "$target.2" -T 'terminal'
+  tmux select-pane -t "$target.3" -T 'nvim'
 
   # Clear each pane after shell initializes to remove prompt artifacts
   sleep 0.3
