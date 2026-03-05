@@ -1,0 +1,37 @@
+#!/bin/bash
+# Dev workspace: nvim (right 60%), claude (top-left), terminal (bottom-left)
+
+SESSION="dev"
+WORKDIR="$HOME/code/clients"
+
+# If already in this session, don't nest
+if [ "$TMUX" ] && tmux display-message -p '#S' | grep -q "^${SESSION}$"; then
+  echo "Already in $SESSION session"
+  exit 0
+fi
+
+# Attach if session already exists
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  tmux attach -t "$SESSION"
+  exit 0
+fi
+
+# Create session — pane 1 = top-left (claude)
+tmux new-session -d -s "$SESSION" -c "$WORKDIR"
+
+# Split right for nvim (60% width) — pane 1 = left, pane 2 = right
+tmux split-window -h -t "$SESSION" -l 60% -c "$WORKDIR"
+
+# Split left pane vertically — pane 1 = top-left, pane 2 = bottom-left, pane 3 = right
+tmux split-window -v -t "$SESSION.1" -l 50% -c "$WORKDIR"
+
+# Label panes
+tmux select-pane -t "$SESSION.1" -T 'claude'
+tmux select-pane -t "$SESSION.2" -T 'terminal'
+tmux select-pane -t "$SESSION.3" -T 'nvim'
+
+# Focus on claude pane
+tmux select-pane -t "$SESSION.1"
+
+# Attach
+tmux attach -t "$SESSION"
