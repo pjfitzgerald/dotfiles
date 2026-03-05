@@ -543,10 +543,14 @@ require('lazy').setup({
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
+        -- You can pass additional configuration to Telescope to change the theme, layout, etc. (PJF: as i've done here to make the window larger)
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
+          layout_config = {
+            width = 0.8,
+            height = 0.6,
+          },
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
 
