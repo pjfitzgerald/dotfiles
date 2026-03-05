@@ -34,7 +34,7 @@ create_layout() {
   tmux select-pane -t "$target.3" -T 'nvim'
 
   # Clear each pane after shell initializes to remove prompt artifacts
-  sleep 0.3
+  sleep 0.1
   tmux send-keys -t "$target.1" 'clear' C-m
   tmux send-keys -t "$target.2" 'clear' C-m
   tmux send-keys -t "$target.3" 'clear' C-m
