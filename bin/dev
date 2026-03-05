@@ -27,7 +27,7 @@ create_layout() {
   local dir="$2"
 
   tmux split-window -h -t "$target" -l 65% -c "$dir"
-  tmux split-window -v -t "$target.1" -l 50% -c "$dir"
+  tmux split-window -v -t "$target.1" -l 35% -c "$dir"
 
   tmux select-pane -t "$target.1" -T 'claude'
   tmux select-pane -t "$target.2" -T 'terminal'
