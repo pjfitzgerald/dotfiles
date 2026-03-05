@@ -222,6 +222,10 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- PJF: Custom keymaps
 --
+-- Center cursor after half-page scroll
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center' })
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center' })
+--
 -- Set <leader>e to open neotree file browser
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle Neo-tree', noremap = true, silent = true })
 --
@@ -242,6 +246,14 @@ vim.keymap.set("v", "<leader>P", '"+P')
 -- seemingly necessary to get around juvare's corporate proxy which intercepts SSL traffic and causes certificate errors for npm-based tools
 -- “unable to get local issuer certificate” error
 vim.env.NODE_EXTRA_CA_CERTS = "/etc/ssl/certs/ca-certificates.crt"
+
+-- PJF: Auto-reload files when modified externally (e.g. by Claude in another tmux pane)
+vim.o.autoread = true
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold' }, {
+  callback = function()
+    vim.cmd 'checktime'
+  end,
+})
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -355,8 +367,8 @@ require('lazy').setup({
       vim.g.copilot_no_tab_map = true
       vim.g.copilot_assume_mapped = true
 
-      -- Accept suggestion with Ctrl+L (pick whatever you like)
-      vim.keymap.set('i', '<C-l>', 'copilot#Accept("\\<CR>")', {
+      -- Accept suggestion with Ctrl+f, (this doesn't overwrite the default nvim c-f mapping to scroll down a full page as it's only mapped in insert mode)
+      vim.keymap.set('i', '<C-f>', 'copilot#Accept("\\<CR>")', {
         expr = true,
         replace_keycodes = false,
         silent = true,
