@@ -1,8 +1,12 @@
 #!/bin/bash
-# Dev workspace: nvim (right 60%), claude (top-left), terminal (bottom-left)
+# Dev workspace with 2 windows:
+#   Window 1 "work": ~/code/clients
+#   Window 2 "config": ~/.config
+# Each window: claude (top-left), terminal (bottom-left), nvim (right 65%)
 
 SESSION="dev"
 WORKDIR="$HOME/code/clients"
+CONFIGDIR="$HOME/.config"
 
 # If already in this session, don't nest
 if [ "$TMUX" ] && tmux display-message -p '#S' | grep -q "^${SESSION}$"; then
@@ -16,22 +20,38 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   exit 0
 fi
 
-# Create session — pane 1 = top-left (claude)
-tmux new-session -d -s "$SESSION" -c "$WORKDIR"
+# Helper: create a 3-pane layout in the current window
+#   pane 1 = top-left (claude), pane 2 = bottom-left (terminal), pane 3 = right (nvim)
+create_layout() {
+  local target="$1"
+  local dir="$2"
 
-# Split right for nvim (60% width) — pane 1 = left, pane 2 = right
-tmux split-window -h -t "$SESSION" -l 60% -c "$WORKDIR"
+  tmux split-window -h -t "$target" -l 65% -c "$dir"
+  tmux split-window -v -t "$target.1" -l 50% -c "$dir"
 
-# Split left pane vertically — pane 1 = top-left, pane 2 = bottom-left, pane 3 = right
-tmux split-window -v -t "$SESSION.1" -l 50% -c "$WORKDIR"
+  tmux set-option -p -t "$target.1" @label 'claude'
+  tmux set-option -p -t "$target.2" @label 'terminal'
+  tmux set-option -p -t "$target.3" @label 'nvim'
 
-# Label panes
-tmux select-pane -t "$SESSION.1" -T 'claude'
-tmux select-pane -t "$SESSION.2" -T 'terminal'
-tmux select-pane -t "$SESSION.3" -T 'nvim'
+  # Clear each pane after shell initializes to remove prompt artifacts
+  sleep 0.3
+  tmux send-keys -t "$target.1" 'clear' C-m
+  tmux send-keys -t "$target.2" 'clear' C-m
+  tmux send-keys -t "$target.3" 'clear' C-m
 
-# Focus on claude pane
-tmux select-pane -t "$SESSION.1"
+  tmux select-pane -t "$target.1"
+}
+
+# Window 1: work
+tmux new-session -d -s "$SESSION" -n 'work' -c "$WORKDIR" -x "$(tput cols)" -y "$(tput lines)"
+create_layout "$SESSION:work" "$WORKDIR"
+
+# Window 2: config
+tmux new-window -t "$SESSION" -n 'config' -c "$CONFIGDIR"
+create_layout "$SESSION:config" "$CONFIGDIR"
+
+# Start on the work window
+tmux select-window -t "$SESSION:work"
 
 # Attach
 tmux attach -t "$SESSION"
