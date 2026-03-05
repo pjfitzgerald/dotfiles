@@ -50,6 +50,9 @@ create_layout "$SESSION:work" "$WORKDIR"
 tmux new-window -t "$SESSION" -n 'config' -c "$CONFIGDIR"
 create_layout "$SESSION:config" "$CONFIGDIR"
 
+# Window 3: misc
+tmux new-window -t "$SESSION" -n 'misc' -c "$HOME"
+
 # Start on the work window
 tmux select-window -t "$SESSION:work"
 
