@@ -6,7 +6,7 @@
 
 SESSION="dev"
 WORKDIR="$HOME/code/clients"
-CONFIGDIR="$HOME/.config"
+CONFIGDIR="$HOME/dotfiles"
 
 # If already in this session, don't nest
 if [ "$TMUX" ] && tmux display-message -p '#S' | grep -q "^${SESSION}$"; then

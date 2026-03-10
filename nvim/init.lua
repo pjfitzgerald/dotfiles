@@ -161,9 +161,11 @@ vim.o.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
--- PJF: Use LF line endings instead of CRLF
-vim.o.fileformat = 'unix'
-vim.o.fileformats = 'unix,dos'
+-- PJF: Use LF line endings instead of CRLF (WSL only — avoids issues editing files shared with Windows)
+if vim.fn.has 'wsl' == 1 then
+  vim.o.fileformat = 'unix'
+  vim.o.fileformats = 'unix,dos'
+end
 
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
@@ -242,10 +244,12 @@ vim.keymap.set("n", "<leader>P", '"+P')
 vim.keymap.set("v", "<leader>p", '"+p')
 vim.keymap.set("v", "<leader>P", '"+P')
 
--- PJF: added an autocommand to set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
+-- PJF: set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
 -- seemingly necessary to get around juvare's corporate proxy which intercepts SSL traffic and causes certificate errors for npm-based tools
 -- “unable to get local issuer certificate” error
-vim.env.NODE_EXTRA_CA_CERTS = "/etc/ssl/certs/ca-certificates.crt"
+if vim.fn.has 'wsl' == 1 then
+  vim.env.NODE_EXTRA_CA_CERTS = “/etc/ssl/certs/ca-certificates.crt”
+end
 
 -- PJF: Auto-reload files when modified externally (e.g. by Claude in another tmux pane)
 vim.o.autoread = true

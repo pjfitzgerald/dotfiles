@@ -37,3 +37,6 @@ nvim.bak.*
 
 # Ignore github-copilot secrets
 github-copilot/
+
+
+todo.md
