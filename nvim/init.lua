@@ -225,8 +225,8 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- PJF: Custom keymaps
 --
 -- Center cursor after half-page scroll
-vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center' })
-vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center' })
+-- vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center' })
+-- vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center' })
 --
 -- Set <leader>e to open neotree file browser
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle Neo-tree', noremap = true, silent = true })
