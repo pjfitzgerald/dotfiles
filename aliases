@@ -1,0 +1,28 @@
+# Grep
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# ls
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Git
+alias gst='git status'
+alias gl='git log'
+
+ga() { git add "$@"; }
+gco() { git checkout "$@"; }
+gc() { git commit "$@"; }
+gp() { git push "$@"; }
+gd() { git diff "$@"; }
+
+# change directories
+
+alias pkm="cd ~/pkm"
+alias devdir='cd ~/dev/'
+alias projects='cd ~/dev/projects'
+alias dotfiles='cd ~/dev/dotfiles'
+alias scripts='cd ~/dev/scripts'
+# alias synccalibre=/Users/patrickfitzgerald/dev/scripts/synccalibre.sh

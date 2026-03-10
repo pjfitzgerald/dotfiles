@@ -33,6 +33,9 @@ if [ -d "$HOME/.config/tmux" ] && [ ! -L "$HOME/.config/tmux" ]; then
 fi
 ln -sfn "$DOTFILES/tmux" "$HOME/.config/tmux"
 
+# ~/.aliases -> repo copy
+ln -sf "$DOTFILES/aliases" "$HOME/.aliases"
+
 # ~/bin/dev
 mkdir -p "$HOME/bin"
 ln -sf "$DOTFILES/bin/dev" "$HOME/bin/dev"

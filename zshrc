@@ -26,24 +26,8 @@ else
   eval "$(dircolors -b)"
   alias ls='ls --color=auto'
 fi
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-
-# ls aliases
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-
-# Git aliases
-alias gst='git status'
-alias gl='git log'
-
-ga() { git add "$@"; }
-gco() { git checkout "$@"; }
-gc() { git commit "$@"; }
-gp() { git push "$@"; }
-gd() { git diff "$@"; }
+# Aliases (kept in separate file)
+[ -f "$HOME/.aliases" ] && source "$HOME/.aliases"
 
 # WSL: ensure native Linux Node.js/npm is used instead of Windows version
 if [[ -d /mnt/c ]]; then
@@ -64,3 +48,13 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Syntax highlighting (must be last)
+if [ -f "$(brew --prefix 2>/dev/null)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+  source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+elif [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+elif [[ -d /mnt/c ]]; then
+  echo "Installing zsh-syntax-highlighting..."
+  sudo apt install -y zsh-syntax-highlighting && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
