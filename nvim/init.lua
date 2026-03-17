@@ -176,9 +176,9 @@ vim.o.confirm = true
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'html', 'xhtml' },
   callback = function()
-    vim.bo.tabstop = 2      --how many columns a \t character displays as (visual width of existing tabs)
-    vim.bo.shiftwidth = 2   --how many columns to indent with >>, <<, and auto-indent
-    vim.bo.softtabstop = 2  --how many columns the Tab key inserts (when combined with expandtab, it inserts spaces instead of a tab character)
+    vim.bo.tabstop = 2 --how many columns a \t character displays as (visual width of existing tabs)
+    vim.bo.shiftwidth = 2 --how many columns to indent with >>, <<, and auto-indent
+    vim.bo.softtabstop = 2 --how many columns the Tab key inserts (when combined with expandtab, it inserts spaces instead of a tab character)
     vim.bo.expandtab = true --pressing Tab inserts spaces instead of a literal \t character
   end,
 })
@@ -225,30 +225,33 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- PJF: Custom keymaps
 --
 -- Center cursor after half-page scroll
--- vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center' })
--- vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center' })
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center' })
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center' })
+
+-- Center cursor after G (bottom of file)
+-- vim.keymap.set('n', 'G', 'Gzz', { desc = 'Scroll to bottom and center' })
 --
 -- Set <leader>e to open neotree file browser
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle Neo-tree', noremap = true, silent = true })
 --
 --
 -- PJF: Copy to system clipboard
-vim.keymap.set("v", "<leader>y", '"+y')
-vim.keymap.set("n", "<leader>Y", '"+yg_')
-vim.keymap.set("n", "<leader>y", '"+y')
-vim.keymap.set("n", "<leader>yy", '"+yy')
+vim.keymap.set('v', '<leader>y', '"+y')
+vim.keymap.set('n', '<leader>Y', '"+yg_')
+vim.keymap.set('n', '<leader>y', '"+y')
+vim.keymap.set('n', '<leader>yy', '"+yy')
 
 -- PJF: Paste from system clipboard
-vim.keymap.set("n", "<leader>p", '"+p')
-vim.keymap.set("n", "<leader>P", '"+P')
-vim.keymap.set("v", "<leader>p", '"+p')
-vim.keymap.set("v", "<leader>P", '"+P')
+vim.keymap.set('n', '<leader>p', '"+p')
+vim.keymap.set('n', '<leader>P', '"+P')
+vim.keymap.set('v', '<leader>p', '"+p')
+vim.keymap.set('v', '<leader>P', '"+P')
 
 -- PJF: set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
 -- seemingly necessary to get around juvare's corporate proxy which intercepts SSL traffic and causes certificate errors for npm-based tools
 -- “unable to get local issuer certificate” error
 if vim.fn.has 'wsl' == 1 then
-  vim.env.NODE_EXTRA_CA_CERTS = “/etc/ssl/certs/ca-certificates.crt”
+  vim.env.NODE_EXTRA_CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
 end
 
 -- PJF: Auto-reload files when modified externally (e.g. by Claude in another tmux pane)
@@ -272,7 +275,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.hl.on_yank()
   end,
 })
-
 
 -- PJF: enable word wrap in Telescope preview windows
 vim.api.nvim_create_autocmd('User', {
@@ -315,8 +317,11 @@ require('lazy').setup({
 
   -- PJF: highlight matching HTML/XML tags
   {
-    'leafOfTree/vim-matchtag',
-    ft = { 'html', 'xhtml', 'xml', 'jsx', 'tsx', 'vue', 'svelte', 'eruby' },
+    'andymass/vim-matchup',
+    event = 'BufReadPost',
+    config = function()
+      vim.g.matchup_matchparen_offscreen = { method = 'popup' }
+    end,
   },
 
   -- PJF: codediff.nvim for improved git diffs
@@ -398,7 +403,7 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  {                     -- Useful plugin to show you pending keybinds.
+  { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -479,7 +484,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -512,8 +517,14 @@ require('lazy').setup({
           file_ignore_patterns = { '%.git/', 'node_modules/' },
           -- PJF: make all Telescope searches case-insensitive
           vimgrep_arguments = {
-            'rg', '--color=never', '--no-heading', '--with-filename',
-            '--line-number', '--column', '--smart-case', '--ignore-case',
+            'rg',
+            '--color=never',
+            '--no-heading',
+            '--with-filename',
+            '--line-number',
+            '--column',
+            '--smart-case',
+            '--ignore-case',
           },
           -- mappings = {
           --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
@@ -600,7 +611,7 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
-      { 'j-hui/fidget.nvim',    opts = {} },
+      { 'j-hui/fidget.nvim', opts = {} },
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
@@ -1015,8 +1026,13 @@ require('lazy').setup({
     lazy = false,
     priority = 1000,
     config = function()
-      require('bamboo').setup {}
-      require('bamboo').load()
+      require('bamboo').setup {
+        highlights = {
+          ['@markup.link'] = { underline = false },
+          ['@markup.link.label'] = { underline = false },
+        },
+      }
+      vim.cmd 'silent colorscheme bamboo'
     end,
   },
 
