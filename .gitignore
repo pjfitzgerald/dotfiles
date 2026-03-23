@@ -23,6 +23,9 @@
 !aliases
 !install.sh
 
+# Ignore tmux plugin installs (managed by TPM)
+tmux/plugins/
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/
