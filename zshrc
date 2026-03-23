@@ -49,6 +49,26 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+# rbenv
+export PATH="${HOME}/.rbenv/bin:${PATH}"
+type -a rbenv > /dev/null 2>&1 && eval "$(rbenv init - zsh)"
+
+# Rails binstubs + node_modules binaries
+export PATH="./bin:./node_modules/.bin:${PATH}:/usr/local/sbin"
+
+# PostgreSQL (Homebrew)
+export PATH="/usr/local/opt/libpq/bin:$PATH"
+
+# Scripts
+export PATH="$PATH:/Users/patrickfitzgerald/dev/scripts"
+
+# Encoding
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# Prevent Homebrew from reporting
+export HOMEBREW_NO_ANALYTICS=1
+
 # Syntax highlighting (must be last)
 if [ -f "$(brew --prefix 2>/dev/null)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
   source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
