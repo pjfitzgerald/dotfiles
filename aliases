@@ -23,6 +23,6 @@ gd() { git diff "$@"; }
 alias pkm="cd ~/pkm"
 alias devdir='cd ~/dev/'
 alias projects='cd ~/dev/projects'
-alias dotfiles='cd ~/dev/dotfiles'
+alias dotfiles='cd ~/dotfiles'
 alias scripts='cd ~/dev/scripts'
 # alias synccalibre=/Users/patrickfitzgerald/dev/scripts/synccalibre.sh
