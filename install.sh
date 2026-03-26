@@ -11,6 +11,15 @@ if [ ! -d "$DOTFILES" ]; then
   exit 1
 fi
 
+# On macOS, ensure Homebrew is on PATH (common for Apple Silicon)
+if [[ "$(uname)" == "Darwin" ]]; then
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+
 # Detect package manager
 if command -v brew &>/dev/null; then
   PKG_MANAGER="brew"
@@ -46,6 +55,11 @@ fi
 # Install tmux
 if ! command -v tmux &>/dev/null; then
   install_pkg tmux
+fi
+
+# Install neovim
+if ! command -v nvim &>/dev/null; then
+  install_pkg neovim
 fi
 
 # Install zsh-syntax-highlighting
@@ -94,6 +108,11 @@ ln -sf "$DOTFILES/aliases" "$HOME/.aliases"
 
 mkdir -p "$HOME/bin"
 ln -sf "$DOTFILES/bin/dev" "$HOME/bin/dev"
+
+# Claude Code config
+mkdir -p "$HOME/.claude"
+ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."

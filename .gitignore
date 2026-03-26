@@ -26,6 +26,10 @@
 # Ignore tmux plugin installs (managed by TPM)
 tmux/plugins/
 
+# Claude Code config
+!claude/
+!claude/**
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/
