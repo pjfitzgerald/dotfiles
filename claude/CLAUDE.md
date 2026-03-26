@@ -19,6 +19,7 @@ This file applies to all projects and provides global guidance to Claude Code.
 - When you discover issues or improvements during a task, fix them inline rather than just reporting them.
 - Prefer editing existing files over creating new ones.
 - Use Homebrew for package management on macOS.
+- Do not add Co-Authored-By lines to git commits.
 
 ## Tools & Stack
 
