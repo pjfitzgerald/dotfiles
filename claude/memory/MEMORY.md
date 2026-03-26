@@ -1,0 +1,1 @@
+- [No co-author on commits](feedback_no_coauthor.md) — don't add Claude as co-author in git commits

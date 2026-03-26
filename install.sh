@@ -113,6 +113,8 @@ ln -sf "$DOTFILES/bin/dev" "$HOME/bin/dev"
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
+mkdir -p "$HOME/.claude/projects/-Users-$(whoami)"
+ln -sfn "$DOTFILES/claude/memory" "$HOME/.claude/projects/-Users-$(whoami)/memory"
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."
