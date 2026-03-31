@@ -245,7 +245,12 @@ vim.keymap.set('n', '<leader>yy', '"+yy')
 vim.keymap.set('n', '<leader>p', '"+p')
 vim.keymap.set('n', '<leader>P', '"+P')
 vim.keymap.set('v', '<leader>p', '"+p')
-vim.keymap.set('v', '<leader>P', '"+P')
+vim.keymap.set('v', '<leader>P', '”+P')
+
+-- PJF: Show full file path
+vim.keymap.set('n', '<leader>fp', function()
+  vim.cmd('echo expand(“%:p”)')
+end, { desc = '[F]ile [P]ath' })
 
 -- PJF: set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
 -- seemingly necessary to get around juvare's corporate proxy which intercepts SSL traffic and causes certificate errors for npm-based tools
@@ -514,7 +519,7 @@ require('lazy').setup({
         --
         defaults = {
           layout_strategy = 'vertical',
-          file_ignore_patterns = { '%.git/', 'node_modules/' },
+          file_ignore_patterns = { '%.git/', 'node_modules/', '%.bak/' },
           -- PJF: make all Telescope searches case-insensitive
           vimgrep_arguments = {
             'rg',
@@ -549,6 +554,10 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sf', function()
         builtin.find_files { hidden = true, no_ignore = true }
       end, { desc = '[S]earch [F]iles' })
+      -- PJF: search only HTML/XHTML files
+      vim.keymap.set('n', '<leader>sx', function()
+        builtin.find_files { prompt_title = 'Search XHTML/HTML Files', find_command = { 'find', '.', '-name', '*.xhtml', '-o', '-name', '*.html' } }
+      end, { desc = '[S]earch [X]HTML/HTML files' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })

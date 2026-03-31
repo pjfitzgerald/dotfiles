@@ -1,0 +1,8 @@
+#!/bin/bash
+layout="$(tmux display-message -p '#{window_layout}')"
+panes="$(tmux list-panes | wc -l)"
+tmux new-window
+for i in $(seq 2 "$panes"); do
+  tmux split-window
+done
+tmux select-layout "$layout"

@@ -110,11 +110,6 @@ if [ -d "$HOME/.config/tmux" ] && [ ! -L "$HOME/.config/tmux" ]; then
 fi
 ln -sfn "$DOTFILES/tmux" "$HOME/.config/tmux"
 
-ln -sf "$DOTFILES/aliases" "$HOME/.aliases"
-
-mkdir -p "$HOME/bin"
-ln -sf "$DOTFILES/bin/dev" "$HOME/bin/dev"
-
 # Claude Code config
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"

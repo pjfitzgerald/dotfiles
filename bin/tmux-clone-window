@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Capture pane info (directory, command) and layout from current window
+layout="$(tmux display-message -p '#{window_layout}')"
+pane_count="$(tmux list-panes | wc -l)"
+
+# Collect each pane's working directory and running command
+dirs=()
+cmds=()
+while IFS=$'\t' read -r dir cmd; do
+  dirs+=("$dir")
+  cmds+=("$cmd")
+done < <(tmux list-panes -F '#{pane_current_path}	#{pane_current_command}')
+
+# Create first pane with the first pane's directory
+tmux new-window -c "${dirs[0]}"
+
+# If the first pane was running something other than the shell, send it
+shell="$(basename "$SHELL")"
+if [[ "${cmds[0]}" != "$shell" ]]; then
+  tmux send-keys "${cmds[0]}" Enter
+fi
+
+# Create remaining panes
+for i in $(seq 1 $((pane_count - 1))); do
+  tmux split-window -c "${dirs[$i]}"
+  if [[ "${cmds[$i]}" != "$shell" ]]; then
+    tmux send-keys "${cmds[$i]}" Enter
+  fi
+done
+
+# Apply the original layout
+tmux select-layout "$layout"
