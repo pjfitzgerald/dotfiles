@@ -56,6 +56,13 @@ alias gd='git diff'
 # Directory shortcuts (shared)
 alias dotfiles='cd ~/dotfiles'
 
+# Pull dotfiles changes from work machine and re-run install
+dotpull() {
+  cd ~/dotfiles || return
+  git remote get-url work &>/dev/null || git remote add work git@github.com:pfjuvare/dotfiles.git
+  git fetch work && git merge work/master && ./install.sh
+}
+
 # WSL-specific
 if [[ -d /mnt/c ]]; then
   # Strip Windows Node.js from PATH
