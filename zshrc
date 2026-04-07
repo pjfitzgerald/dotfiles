@@ -56,6 +56,9 @@ alias gd='git diff'
 # Directory shortcuts (shared)
 alias dotfiles='cd ~/dotfiles'
 
+# openclaw
+# alias openclaw='docker compose -f ~/.openclaw/repo/docker-compose.yml run --rm openclaw-cli'
+
 # WSL-specific
 if [[ -d /mnt/c ]]; then
   # Strip Windows Node.js from PATH
