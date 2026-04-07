@@ -128,3 +128,4 @@ if [ -f "$(brew --prefix 2>/dev/null)/share/zsh-syntax-highlighting/zsh-syntax-h
 elif [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
+export PATH="$HOME/.local/bin:$PATH"
