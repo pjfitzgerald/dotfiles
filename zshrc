@@ -53,39 +53,16 @@ alias gr='git remote'
 alias gl='git log'
 alias gd='git diff'
 
-# Directory shortcuts (shared)
-alias dotfiles='cd ~/dotfiles'
-
-# openclaw
-# alias openclaw='docker compose -f ~/.openclaw/repo/docker-compose.yml run --rm openclaw-cli'
-
 # WSL-specific
 if [[ -d /mnt/c ]]; then
   # Strip Windows Node.js from PATH
   export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '/mnt/c/Program Files/nodejs' | tr '\n' ':' | sed 's/:$//')"
   # Corporate proxy CA certs
   export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
-
-  # Work client directory shortcuts
-  alias csg='cd ~/code/clients/CSG'
-  alias ocrm='cd ~/code/clients/CSG/op-crm'
-  alias dpird='cd ~/code/clients/DPIRD'
-  alias dpirdrm='cd ~/code/clients/DPIRD/resource-management'
-  alias ntfes='cd ~/code/clients/NTFES'
-  alias qfd='cd ~/code/clients/QFD'
-  alias sases='cd ~/code/clients/sa-ses'
-  alias watercorp='cd ~/code/clients/watercorp'
-  alias wcdas='cd ~/code/clients/watercorp/boards/daily-awareness-system-rebuild/'
-  alias wcww='cd ~/code/clients/watercorp/boards/waste-discharge-reporting-rebuild/'
-  alias wcfaults='cd ~/code/clients/watercorp/boards/faults-register-rebuild/'
 fi
 
 # macOS-specific
 if [[ "$(uname)" == "Darwin" ]]; then
-  alias pkm="cd ~/pkm"
-  alias devdir='cd ~/dev/'
-  alias projects='cd ~/dev/projects'
-
   # rbenv
   export PATH="${HOME}/.rbenv/bin:${PATH}"
   type -a rbenv > /dev/null 2>&1 && eval "$(rbenv init - zsh)"
@@ -120,9 +97,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
+# Private aliases (not tracked in git)
+[ -f "$HOME/dotfiles/aliases.local" ] && source "$HOME/dotfiles/aliases.local"
+
 # Syntax highlighting (must be last)
 if [ -f "$(brew --prefix 2>/dev/null)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
   source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 elif [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
+
+# opencode
+export PATH=/Users/patrickfitzgerald/.opencode/bin:$PATH
