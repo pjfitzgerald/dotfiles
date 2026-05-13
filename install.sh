@@ -114,8 +114,13 @@ ln -sfn "$DOTFILES/tmux" "$HOME/.config/tmux"
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
-mkdir -p "$HOME/.claude/projects/-Users-$(whoami)"
-ln -sfn "$DOTFILES/claude/memory" "$HOME/.claude/projects/-Users-$(whoami)/memory"
+if [[ "$(uname)" == "Darwin" ]]; then
+  CLAUDE_PROJECT_DIR="$HOME/.claude/projects/-Users-$(whoami)"
+else
+  CLAUDE_PROJECT_DIR="$HOME/.claude/projects/-home-$(whoami)"
+fi
+mkdir -p "$CLAUDE_PROJECT_DIR"
+ln -sfn "$DOTFILES/claude/memory" "$CLAUDE_PROJECT_DIR/memory"
 ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
 
 echo ""
