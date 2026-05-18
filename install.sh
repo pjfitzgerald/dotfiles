@@ -42,6 +42,11 @@ install_pkg() {
   esac
 }
 
+# Refresh the apt package index once before installing anything.
+if [ "$PKG_MANAGER" = "apt" ]; then
+  sudo apt-get update
+fi
+
 # Install zsh
 if ! command -v zsh &>/dev/null; then
   install_pkg zsh
@@ -63,9 +68,86 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
 
-# Install neovim
-if ! command -v nvim &>/dev/null; then
+# Install curl (needed below to fetch Neovim)
+if ! command -v curl &>/dev/null; then
+  install_pkg curl
+fi
+
+# Install ripgrep (Telescope live_grep, todo-comments)
+if ! command -v rg &>/dev/null; then
+  install_pkg ripgrep
+fi
+
+# Install fd (Telescope file finding) — Debian/Ubuntu names the package
+# "fd-find" and the binary "fdfind", which Telescope autodetects.
+if ! command -v fd &>/dev/null && ! command -v fdfind &>/dev/null; then
+  if [ "$PKG_MANAGER" = "apt" ]; then
+    install_pkg fd-find
+  else
+    install_pkg fd
+  fi
+fi
+
+# Install Node.js + npm (Mason installs some LSP servers via npm).
+# Debian/Ubuntu ship nodejs without npm, so install npm explicitly there.
+if ! command -v node &>/dev/null; then
+  case "$PKG_MANAGER" in
+    brew)   install_pkg node ;;
+    pacman) sudo pacman -S --noconfirm nodejs npm ;;
+    apt)    sudo apt-get install -y nodejs npm ;;
+  esac
+elif ! command -v npm &>/dev/null; then
+  case "$PKG_MANAGER" in
+    brew)   install_pkg node ;;
+    pacman) sudo pacman -S --noconfirm npm ;;
+    apt)    sudo apt-get install -y npm ;;
+  esac
+fi
+
+# Install a C compiler toolchain (telescope-fzf-native + treesitter parsers).
+if ! command -v cc &>/dev/null && ! command -v gcc &>/dev/null; then
+  case "$PKG_MANAGER" in
+    brew)   xcode-select --install 2>/dev/null || true ;;
+    pacman) sudo pacman -S --noconfirm base-devel ;;
+    apt)    sudo apt-get install -y build-essential ;;
+  esac
+fi
+
+# Install / upgrade Neovim — the nvim config requires >= 0.11. Distro repos
+# (apt/pacman) often ship an older Neovim, so on Linux we install the official
+# static build into ~/.local instead of using the package manager.
+NVIM_VERSION="v0.12.2"
+nvim_recent_enough() {
+  command -v nvim &>/dev/null || return 1
+  local v
+  v=$(nvim --version | head -1 | sed -E 's/^NVIM v([0-9]+\.[0-9]+).*/\1/')
+  [ "$(printf '%s\n0.11\n' "$v" | sort -V | head -1)" = "0.11" ]
+}
+if nvim_recent_enough; then
+  echo "Neovim $(nvim --version | head -1 | awk '{print $2}') already installed."
+elif [ "$PKG_MANAGER" = "brew" ]; then
   install_pkg neovim
+else
+  case "$(uname -m)" in
+    x86_64|amd64)  nvim_arch="x86_64" ;;
+    aarch64|arm64) nvim_arch="arm64" ;;
+    *)             nvim_arch="" ;;
+  esac
+  if [ -z "$nvim_arch" ]; then
+    echo "Warning: unsupported arch $(uname -m); install Neovim >= 0.11 manually."
+  else
+    echo "Installing Neovim $NVIM_VERSION to ~/.local..."
+    nvim_tar="nvim-linux-${nvim_arch}.tar.gz"
+    nvim_tmp=$(mktemp -d)
+    curl -fsSL -o "$nvim_tmp/$nvim_tar" \
+      "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/${nvim_tar}"
+    rm -rf "$HOME/.local/nvim-linux-${nvim_arch}"
+    mkdir -p "$HOME/.local/bin"
+    tar -xzf "$nvim_tmp/$nvim_tar" -C "$HOME/.local"
+    ln -sfn "$HOME/.local/nvim-linux-${nvim_arch}/bin/nvim" "$HOME/.local/bin/nvim"
+    rm -rf "$nvim_tmp"
+    echo "Installed Neovim to ~/.local/bin/nvim (ensure ~/.local/bin is on PATH)."
+  fi
 fi
 
 # Install zsh-syntax-highlighting
