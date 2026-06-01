@@ -118,6 +118,23 @@ vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
 end)
 
+-- PJF: On WSL, force win32yank.exe — the WSLg X clipboard bridge is unreliable,
+-- and nvim otherwise auto-picks xclip which doesn't sync to the Windows clipboard.
+if vim.fn.has('wsl') == 1 and vim.fn.executable('win32yank.exe') == 1 then
+  vim.g.clipboard = {
+    name = 'win32yank-wsl',
+    copy = {
+      ['+'] = 'win32yank.exe -i --crlf',
+      ['*'] = 'win32yank.exe -i --crlf',
+    },
+    paste = {
+      ['+'] = 'win32yank.exe -o --lf',
+      ['*'] = 'win32yank.exe -o --lf',
+    },
+    cache_enabled = 0,
+  }
+end
+
 -- Enable break indent
 vim.o.breakindent = true
 
@@ -552,7 +569,13 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', function()
-        builtin.find_files { hidden = true, no_ignore = true }
+        -- PJF: explicit find_command so hidden+no-ignore work even when only rg is installed
+        -- (telescope only translates these flags for fd, not rg)
+        builtin.find_files {
+          hidden = true,
+          no_ignore = true,
+          find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--glob', '!.git/*' },
+        }
       end, { desc = '[S]earch [F]iles' })
       -- PJF: search only HTML/XHTML files
       vim.keymap.set('n', '<leader>sx', function()
@@ -1085,6 +1108,38 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+  -- PJF: Obsidian.nvim — edit Obsidian vault notes in Neovim
+  {
+    'epwalsh/obsidian.nvim',
+    version = '*',
+    lazy = true,
+    ft = 'markdown',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    opts = {
+      workspaces = {
+        { name = 'personal', path = '~/obsidian-vault' },
+      },
+      mappings = {
+        -- Override gf to follow Obsidian links (falls through to normal gf for non-links)
+        ['gf'] = {
+          action = function()
+            return require('obsidian').util.gf_passthrough()
+          end,
+          opts = { noremap = false, expr = true, buffer = true },
+        },
+        -- Toggle checkboxes in markdown
+        ['<leader>ch'] = {
+          action = function()
+            return require('obsidian').util.toggle_checkbox()
+          end,
+          opts = { buffer = true },
+        },
+      },
+    },
+  },
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',

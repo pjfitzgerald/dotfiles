@@ -75,13 +75,17 @@ if [[ -d /mnt/c ]]; then
   alias ocrm='cd ~/code/clients/CSG/op-crm'
   alias dpird='cd ~/code/clients/DPIRD'
   alias dpirdrm='cd ~/code/clients/DPIRD/resource-management'
+  alias dpirdpm='cd ~/code/clients/DPIRD/personnel-manager'
   alias ntfes='cd ~/code/clients/NTFES'
   alias qfd='cd ~/code/clients/QFD'
   alias sases='cd ~/code/clients/sa-ses'
+  alias agvic='cd ~/code/clients/agvic'
+  alias avops='cd ~/code/clients/agvic/boards/agvic-ops'
   alias watercorp='cd ~/code/clients/watercorp'
   alias wcdas='cd ~/code/clients/watercorp/boards/daily-awareness-system-rebuild/'
   alias wcww='cd ~/code/clients/watercorp/boards/waste-discharge-reporting-rebuild/'
   alias wcfaults='cd ~/code/clients/watercorp/boards/faults-register-rebuild/'
+  alias pap='cd ~/code/clients/perth-airport/'
 fi
 
 # macOS-specific
