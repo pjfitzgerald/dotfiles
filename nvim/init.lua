@@ -189,9 +189,12 @@ end
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
--- PJF: Use 2 spaces instead of tabs for HTML files
+-- PJF: Use 2 spaces instead of tabs for HTML/JS/JSON files.
+-- JS/JSON included because conform's format_on_save has no JS formatter, so it
+-- falls back to LSP (ts_ls) formatting, which retabs the file using expandtab.
+-- Without this, saving board .js files converts all leading spaces to tabs.
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'html', 'xhtml' },
+  pattern = { 'html', 'xhtml', 'javascript', 'json', 'typescript' },
   callback = function()
     vim.bo.tabstop = 2 --how many columns a \t character displays as (visual width of existing tabs)
     vim.bo.shiftwidth = 2 --how many columns to indent with >>, <<, and auto-indent
