@@ -150,6 +150,11 @@ else
   fi
 fi
 
+# Install clipboard tool (needed for tmux/neovim clipboard integration on Linux/WSL)
+if [[ "$(uname)" == "Linux" ]] && ! command -v xclip &>/dev/null; then
+  install_pkg xclip
+fi
+
 # Install zsh-syntax-highlighting
 if [ "$PKG_MANAGER" = "brew" ]; then
   brew list zsh-syntax-highlighting &>/dev/null || brew install zsh-syntax-highlighting

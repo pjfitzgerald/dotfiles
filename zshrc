@@ -53,12 +53,39 @@ alias gr='git remote'
 alias gl='git log'
 alias gd='git diff'
 
+# Directory shortcuts (shared)
+alias dotfiles='cd ~/dotfiles'
+
+# Pull dotfiles changes from work machine and re-run install
+dotpull() {
+  cd ~/dotfiles || return
+  git remote get-url work &>/dev/null || git remote add work git@github.com:pfjuvare/dotfiles.git
+  git fetch work && git merge work/master && ./install.sh
+}
+
 # WSL-specific
 if [[ -d /mnt/c ]]; then
   # Strip Windows Node.js from PATH
   export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '/mnt/c/Program Files/nodejs' | tr '\n' ':' | sed 's/:$//')"
   # Corporate proxy CA certs
   export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+  # Work client directory shortcuts
+  alias csg='cd ~/code/clients/CSG'
+  alias ocrm='cd ~/code/clients/CSG/op-crm'
+  alias dpird='cd ~/code/clients/DPIRD'
+  alias dpirdrm='cd ~/code/clients/DPIRD/resource-management'
+  alias dpirdpm='cd ~/code/clients/DPIRD/personnel-manager'
+  alias ntfes='cd ~/code/clients/NTFES'
+  alias qfd='cd ~/code/clients/QFD'
+  alias sases='cd ~/code/clients/sa-ses'
+  alias agvic='cd ~/code/clients/agvic'
+  alias avops='cd ~/code/clients/agvic/boards/agvic-ops'
+  alias watercorp='cd ~/code/clients/watercorp'
+  alias wcdas='cd ~/code/clients/watercorp/boards/daily-awareness-system-rebuild/'
+  alias wcww='cd ~/code/clients/watercorp/boards/waste-discharge-reporting-rebuild/'
+  alias wcfaults='cd ~/code/clients/watercorp/boards/faults-register-rebuild/'
+  alias pap='cd ~/code/clients/perth-airport/'
 fi
 
 # macOS-specific
