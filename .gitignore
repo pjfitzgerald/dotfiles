@@ -44,3 +44,7 @@ nvim.bak.*
 
 # Ignore github-copilot secrets
 github-copilot/
+
+# Ignore macOS cruft
+.DS_Store
+**/.DS_Store

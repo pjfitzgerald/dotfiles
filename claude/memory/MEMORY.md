@@ -1,1 +1,2 @@
 - [No co-author on commits](feedback_no_coauthor.md) — don't add Claude as co-author in git commits
+- [dsfitz Synology NAS](reference_dsfitz.md) — SSH alias, /volume2/docker layout, tailnet, docker-compose v1, PUID 1026/100
