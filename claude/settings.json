@@ -1,4 +1,22 @@
 {
-  "model": "opus",
-  "agentPushNotifEnabled": true
+  "model": "claude-opus-4-8",
+  "voice": {
+    "enabled": true,
+    "mode": "tap"
+  },
+  "editorMode": "vim",
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/selfhost-context.sh"
+          }
+        ]
+      }
+    ]
+  }
 }

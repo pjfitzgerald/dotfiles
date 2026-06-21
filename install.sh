@@ -204,6 +204,7 @@ fi
 mkdir -p "$CLAUDE_PROJECT_DIR"
 ln -sfn "$DOTFILES/claude/memory" "$CLAUDE_PROJECT_DIR/memory"
 ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
+ln -sfn "$DOTFILES/claude/hooks" "$HOME/.claude/hooks"
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."
