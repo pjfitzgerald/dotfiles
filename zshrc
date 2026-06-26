@@ -86,6 +86,9 @@ if [[ -d /mnt/c ]]; then
   alias wcww='cd ~/code/clients/watercorp/boards/waste-discharge-reporting-rebuild/'
   alias wcfaults='cd ~/code/clients/watercorp/boards/faults-register-rebuild/'
   alias pap='cd ~/code/clients/perth-airport/'
+
+  # Juvare PKM (Obsidian vault on OneDrive)
+  alias pkm='cd "/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm"'
 fi
 
 # macOS-specific
