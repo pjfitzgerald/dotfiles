@@ -4,3 +4,5 @@
 - [Nextcloud](project_nextcloud.md) — runs on t480 w/ data on dsfitz via NFS; dsfitz is RAM-constrained (3.8 GB)
 - [Paperless](project_paperless.md) — migrated to t480 (OCR/SQLite) w/ documents on dsfitz via NFS; old dsfitz container left stopped
 - [*arr stack](project_arr.md) — Prowlarr/Sonarr/Radarr/Lidarr on t480, qBittorrent+Plex on dsfitz, /data shared via NFS; migrated 2026-06-23
+- [FreshRSS](project_freshrss.md) — migrated to t480 2026-06-27, fully local SQLite (no NFS), port 8085; old dsfitz container stopped
+- [Memos](project_memos.md) — note/memo service set up fresh on t480 2026-06-28, fully local SQLite (no NFS), port 5230
