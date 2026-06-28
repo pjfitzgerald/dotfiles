@@ -1,12 +1,5 @@
 {
-  "model": "claude-opus-4-8",
-  "voice": {
-    "enabled": true,
-    "mode": "tap"
-  },
-  "editorMode": "vim",
-  "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
+  "model": "opus",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -18,5 +11,13 @@
         ]
       }
     ]
-  }
+  },
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "tap"
+  },
+  "editorMode": "vim",
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true
 }
