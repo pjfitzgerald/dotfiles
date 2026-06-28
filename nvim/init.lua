@@ -1111,37 +1111,9 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
-  -- PJF: Obsidian.nvim — edit Obsidian vault notes in Neovim
-  {
-    'epwalsh/obsidian.nvim',
-    version = '*',
-    lazy = true,
-    ft = 'markdown',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-    },
-    opts = {
-      workspaces = {
-        { name = 'personal', path = '~/obsidian-vault' },
-      },
-      mappings = {
-        -- Override gf to follow Obsidian links (falls through to normal gf for non-links)
-        ['gf'] = {
-          action = function()
-            return require('obsidian').util.gf_passthrough()
-          end,
-          opts = { noremap = false, expr = true, buffer = true },
-        },
-        -- Toggle checkboxes in markdown
-        ['<leader>ch'] = {
-          action = function()
-            return require('obsidian').util.toggle_checkbox()
-          end,
-          opts = { buffer = true },
-        },
-      },
-    },
-  },
+  -- PJF: obsidian.nvim (community fork) lives in its own module, loaded just
+  -- below via `require 'custom.plugins.obsidian'`. The old epwalsh/obsidian.nvim
+  -- spec that used to sit here was the dead fork and has been removed.
 
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
@@ -1172,6 +1144,8 @@ require('lazy').setup({
   -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+
+  require 'custom.plugins.obsidian',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
