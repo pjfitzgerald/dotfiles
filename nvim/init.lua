@@ -120,7 +120,7 @@ end)
 
 -- PJF: On WSL, force win32yank.exe — the WSLg X clipboard bridge is unreliable,
 -- and nvim otherwise auto-picks xclip which doesn't sync to the Windows clipboard.
-if vim.fn.has('wsl') == 1 and vim.fn.executable('win32yank.exe') == 1 then
+if vim.fn.has 'wsl' == 1 and vim.fn.executable 'win32yank.exe' == 1 then
   vim.g.clipboard = {
     name = 'win32yank-wsl',
     copy = {
@@ -227,14 +227,9 @@ vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- Split navigation with CTRL+<hjkl> is provided by vim-tmux-navigator (plugin
+-- spec below): it moves between nvim splits and crosses seamlessly into adjacent
+-- tmux panes. Replaces the manual <C-w>hjkl maps. See `:help wincmd`.
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
@@ -269,7 +264,7 @@ vim.keymap.set('v', '<leader>P', '”+P')
 
 -- PJF: Show full file path
 vim.keymap.set('n', '<leader>fp', function()
-  vim.cmd('echo expand(“%:p”)')
+  vim.cmd 'echo expand(“%:p”)'
 end, { desc = '[F]ile [P]ath' })
 
 -- PJF: set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
@@ -1144,6 +1139,27 @@ require('lazy').setup({
   -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+
+  -- PJF: vim-tmux-navigator -- unified C-hjkl navigation across nvim splits and
+  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via TPM)
+  {
+    'christoomey/vim-tmux-navigator',
+    cmd = {
+      'TmuxNavigateLeft',
+      'TmuxNavigateDown',
+      'TmuxNavigateUp',
+      'TmuxNavigateRight',
+      'TmuxNavigatePrevious',
+      'TmuxNavigatorProcessList',
+    },
+    keys = {
+      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', desc = 'Navigate left (nvim split / tmux pane)' },
+      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', desc = 'Navigate down (nvim split / tmux pane)' },
+      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', desc = 'Navigate up (nvim split / tmux pane)' },
+      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', desc = 'Navigate right (nvim split / tmux pane)' },
+      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', desc = 'Navigate to previous split/pane' },
+    },
+  },
 
   require 'custom.plugins.obsidian',
 

@@ -14,8 +14,7 @@
 -- Juvare OneDrive folder; on macOS it's ~/pkm. Resolve once and reuse for the
 -- workspace, the conceallevel autocmd, and the <leader>oP tmux window so the
 -- same file works on both boxes.
-local vault_path = vim.fn.has 'wsl' == 1 and '/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm'
-  or vim.fn.expand '~/pkm'
+local vault_path = vim.fn.has 'wsl' == 1 and '/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm' or vim.fn.expand '~/pkm'
 
 -- PJF: step to the previous/next day's daily note RELATIVE TO THE CURRENT NOTE.
 -- The built-in :Obsidian yesterday/tomorrow are relative to the system date, so
@@ -114,8 +113,20 @@ return {
     { '<leader>om', '<cmd>Obsidian tomorrow<cr>', desc = 'Obsidian: tomorrow' },
     { '<leader>od', '<cmd>Obsidian dailies<cr>', desc = 'Obsidian: browse dailies' },
     -- cycle daily notes relative to the CURRENT note (older/newer day)
-    { '<leader>o[', function() obsidian_daily_step(-1) end, desc = 'Obsidian: previous day note' },
-    { '<leader>o]', function() obsidian_daily_step(1) end, desc = 'Obsidian: next day note' },
+    {
+      '<leader>o[',
+      function()
+        obsidian_daily_step(-1)
+      end,
+      desc = 'Obsidian: previous day note',
+    },
+    {
+      '<leader>o]',
+      function()
+        obsidian_daily_step(1)
+      end,
+      desc = 'Obsidian: next day note',
+    },
     -- navigation within / around a note
     { '<leader>ob', '<cmd>Obsidian backlinks<cr>', desc = 'Obsidian: backlinks' },
     { '<leader>ol', '<cmd>Obsidian links<cr>', desc = 'Obsidian: links in note' },
