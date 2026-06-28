@@ -150,6 +150,13 @@ else
   fi
 fi
 
+# Install opencode (terminal AI coding agent; coexists with Claude Code).
+# Official installer drops the binary in ~/.opencode/bin.
+if ! command -v opencode &>/dev/null && [ ! -x "$HOME/.opencode/bin/opencode" ]; then
+  echo "Installing opencode..."
+  curl -fsSL https://opencode.ai/install | bash
+fi
+
 # Install zsh-syntax-highlighting
 if [ "$PKG_MANAGER" = "brew" ]; then
   brew list zsh-syntax-highlighting &>/dev/null || brew install zsh-syntax-highlighting
@@ -205,6 +212,14 @@ mkdir -p "$CLAUDE_PROJECT_DIR"
 ln -sfn "$DOTFILES/claude/memory" "$CLAUDE_PROJECT_DIR/memory"
 ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
 ln -sfn "$DOTFILES/claude/hooks" "$HOME/.claude/hooks"
+
+# opencode config (coexists with Claude Code).
+# Reuses ~/.claude/CLAUDE.md (rules) and ~/.claude/skills/*/SKILL.md (skills) via
+# opencode's built-in fallback, so only the opencode-specific config lives here.
+# One-time, not symlinked: run `opencode auth login` and pick OpenRouter.
+mkdir -p "$HOME/.config/opencode"
+ln -sf "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+ln -sf "$DOTFILES/opencode/tui.json" "$HOME/.config/opencode/tui.json"
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."

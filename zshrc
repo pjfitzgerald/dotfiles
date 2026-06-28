@@ -68,10 +68,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
   type -a rbenv > /dev/null 2>&1 && eval "$(rbenv init - zsh)"
 
   # Rails binstubs + node_modules binaries
-  export PATH="./bin:./node_modules/.bin:${PATH}:/usr/local/sbin"
+  export PATH="./bin:./node_modules/.bin:${PATH}"
 
   # PostgreSQL (Homebrew)
-  export PATH="/usr/local/opt/libpq/bin:$PATH"
+  export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
   # Encoding
   export LANG=en_US.UTF-8
@@ -86,6 +86,11 @@ export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/bin:$PATH"
 export PATH="$HOME/dotfiles/bin:$PATH"
+
+# Personal scripts (macOS)
+if [[ "$(uname)" == "Darwin" ]] && [[ -d "$HOME/dev/scripts" ]]; then
+  export PATH="$PATH:$HOME/dev/scripts"
+fi
 
 # FZF - show hidden files
 export FZF_DEFAULT_COMMAND='find . -type f -not -path "*/\.git/*"'
@@ -107,5 +112,9 @@ elif [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
+# Default editor (used by opencode's editor_open, git, etc.)
+export EDITOR=nvim
+export VISUAL=nvim
+
 # opencode
-export PATH=/Users/patrickfitzgerald/.opencode/bin:$PATH
+export PATH="$HOME/.opencode/bin:$PATH"
