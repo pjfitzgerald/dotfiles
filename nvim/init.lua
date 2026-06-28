@@ -172,9 +172,12 @@ end
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
--- PJF: Use 2 spaces instead of tabs for HTML files
+-- PJF: Use 2 spaces instead of tabs for HTML/JS/JSON files.
+-- JS/JSON included because conform's format_on_save has no JS formatter, so it
+-- falls back to LSP (ts_ls) formatting, which retabs the file using expandtab.
+-- Without this, saving board .js files converts all leading spaces to tabs.
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'html', 'xhtml' },
+  pattern = { 'html', 'xhtml', 'javascript', 'json', 'typescript' },
   callback = function()
     vim.bo.tabstop = 2 --how many columns a \t character displays as (visual width of existing tabs)
     vim.bo.shiftwidth = 2 --how many columns to indent with >>, <<, and auto-indent
@@ -207,14 +210,9 @@ vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- Split navigation with CTRL+<hjkl> is provided by vim-tmux-navigator (plugin
+-- spec below): it moves between nvim splits and crosses seamlessly into adjacent
+-- tmux panes. Replaces the manual <C-w>hjkl maps. See `:help wincmd`.
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
@@ -245,12 +243,23 @@ vim.keymap.set('n', '<leader>yy', '"+yy')
 vim.keymap.set('n', '<leader>p', '"+p')
 vim.keymap.set('n', '<leader>P', '"+P')
 vim.keymap.set('v', '<leader>p', '"+p')
-vim.keymap.set('v', '<leader>P', '”+P')
+vim.keymap.set('v', '<leader>P', '"+P')
 
 -- PJF: Show full file path
 vim.keymap.set('n', '<leader>fp', function()
-  vim.cmd('echo expand(“%:p”)')
+  vim.cmd 'echo expand("%:p")'
 end, { desc = '[F]ile [P]ath' })
+
+-- PJF: open the pkm vault in a NEW tmux window (named 'pkm', cwd ~/pkm, running
+-- nvim on the vault). A new window beats a pane (cramped for a whole vault) or a
+-- session (overkill) -- pkm gets full-screen space and `prefix + l` flips back.
+vim.keymap.set('n', '<leader>oP', function()
+  if vim.env.TMUX == nil then
+    return vim.notify('Not inside tmux — cannot open a tmux window', vim.log.levels.WARN)
+  end
+  local pkm = vim.fn.expand '~/pkm'
+  vim.fn.system { 'tmux', 'new-window', '-n', 'pkm', '-c', pkm, 'nvim', pkm }
+end, { desc = 'Obsidian: open pkm vault in new tmux window' })
 
 -- PJF: set NODE_EXTRA_CA_CERTS for npm-based tools (specifically github copilot in this case)
 -- seemingly necessary to get around juvare's corporate proxy which intercepts SSL traffic and causes certificate errors for npm-based tools
@@ -289,6 +298,18 @@ vim.api.nvim_create_autocmd('User', {
   end,
 })
 
+-- PJF: enable conceal only inside the pkm vault so obsidian.nvim's UI features
+-- render there, without concealing in JSON/other filetypes across other projects.
+-- conceallevel is window-local, so scope it by path and set it on every event that
+-- shows a pkm note in a window (initial read, new split, tmux-resurrect-restored
+-- windows) -- a markdown FileType autocmd alone misses splits and restored sessions.
+vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufWinEnter' }, {
+  pattern = vim.fn.expand '~/pkm' .. '/*.md',
+  callback = function()
+    vim.opt_local.conceallevel = 2
+  end,
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -314,6 +335,49 @@ rtp:prepend(lazypath)
 --  To update plugins you can run
 --    :Lazy update
 --
+
+-- PJF: step to the previous/next day's daily note RELATIVE TO THE CURRENT NOTE.
+-- The built-in :Obsidian yesterday/tomorrow are relative to the system date, so
+-- they don't "cycle" when you're already viewing an older daily note. This parses
+-- the date from the current buffer's filename (YYYY-MM-DD, or the legacy YYYYMMDD)
+-- and opens the day +/- `delta` away; falls back to today if not on a daily note.
+-- Used by <leader>o[ / <leader>o] in the obsidian.nvim spec below.
+local function obsidian_daily_step(delta)
+  local stem = vim.fn.expand '%:t:r'
+  local y, m, d = stem:match '^(%d%d%d%d)%-(%d%d)%-(%d%d)$'
+  if not y then
+    y, m, d = stem:match '^(%d%d%d%d)(%d%d)(%d%d)$'
+  end
+  local anchor = y and os.time { year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 } or os.time()
+  require('obsidian.daily').daily({ date = anchor + delta * 24 * 3600 }):open()
+end
+
+-- PJF: <CR> wrapper for obsidian notes. The built-in checkbox cycle (smart_action
+-- + checkbox.order = {' ','x',''}) goes [ ] -> [x] -> '- ' dash -> back to [ ], but
+-- it can't REMOVE the list marker. This adds a 'no-dash / bare line' stop: on a
+-- plain '- text' line it strips the '- ', so the full loop is
+--   [ ] -> [x] -> '- ' dash -> bare line -> [ ]
+-- (the bare -> [ ] step is the plugin's create_new, on by default). Everything
+-- else -- links, headings, tags, and the rest of the cycle -- delegates to the
+-- plugin's smart_action. Installed as a buffer-local <CR> map in the spec below.
+local function obsidian_cr()
+  local api = require 'obsidian.api'
+  local line = vim.api.nvim_get_current_line()
+  -- With checkbox.order = {'', ' ', 'x'} the plugin handles bare->'- ' dash->'[ ]'
+  -- ->'[x]'. '- [x]' is the last state before looping back to a bare line, so we
+  -- strip the WHOLE '- [x] ' prefix here. Guard with cursor_link/cursor_tag so
+  -- pressing <CR> on a link/tag inside a '- [x] ...' item still follows it.
+  local indent, body = line:match '^(%s*)%- %[x%]%s?(.*)$'
+  if indent and not api.cursor_link() and not api.cursor_tag() then
+    vim.api.nvim_set_current_line(indent .. body)
+    return
+  end
+  -- otherwise defer to the plugin: smart_action returns keys to feed (noremap, so
+  -- a returned literal '<CR>' runs the default action and never recurses into this)
+  local keys = api.smart_action()
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+end
+
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
@@ -334,6 +398,184 @@ require('lazy').setup({
     'esmuellert/codediff.nvim',
     cmd = 'CodeDiff',
     opts = {},
+  },
+
+  -- PJF: vim-tmux-navigator -- unified C-hjkl navigation across nvim splits and
+  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via TPM)
+  {
+    'christoomey/vim-tmux-navigator',
+    cmd = {
+      'TmuxNavigateLeft',
+      'TmuxNavigateDown',
+      'TmuxNavigateUp',
+      'TmuxNavigateRight',
+      'TmuxNavigatePrevious',
+      'TmuxNavigatorProcessList',
+    },
+    keys = {
+      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', desc = 'Navigate left (nvim split / tmux pane)' },
+      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', desc = 'Navigate down (nvim split / tmux pane)' },
+      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', desc = 'Navigate up (nvim split / tmux pane)' },
+      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', desc = 'Navigate right (nvim split / tmux pane)' },
+      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', desc = 'Navigate to previous split/pane' },
+    },
+  },
+
+  -- PJF: obsidian.nvim for editing an Obsidian vault from Neovim
+  {
+    'obsidian-nvim/obsidian.nvim',
+    version = '*',
+    ft = 'markdown',
+    cmd = 'Obsidian',
+    -- PJF: the plugin hardcodes its bullet-conceal to match '-', '*' AND '+'
+    -- (ui.lua: `"^%s*[-%*%+] "`), with no config knob, so '*' and '+' list
+    -- markers also render as '•'. Patch the marker class down to '-' only so '*'
+    -- and '+' stay literal. Runs on install/update; re-applies after :Lazy update
+    -- (git pull resets the file, then build re-patches). Both -e's make it
+    -- idempotent whether the file is upstream (`[-%*%+]`) or already partly patched.
+    build = [[sed -i -e 's/\[-%\*%+\]/[-]/' -e 's/\[-%\*\]/[-]/' lua/obsidian/ui.lua]],
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    keys = {
+      -- open / find / create
+      { '<leader>oo', '<cmd>Obsidian quick_switch<cr>', desc = 'Obsidian: open/switch note' },
+      { '<leader>on', '<cmd>Obsidian new<cr>', desc = 'Obsidian: new note' },
+      { '<leader>os', '<cmd>Obsidian search<cr>', desc = 'Obsidian: search (grep)' },
+      { '<leader>og', '<cmd>Obsidian tags<cr>', desc = 'Obsidian: find by tag' },
+      -- daily notes
+      { '<leader>ot', '<cmd>Obsidian today<cr>', desc = 'Obsidian: today' },
+      { '<leader>oy', '<cmd>Obsidian yesterday<cr>', desc = 'Obsidian: yesterday' },
+      { '<leader>om', '<cmd>Obsidian tomorrow<cr>', desc = 'Obsidian: tomorrow' },
+      { '<leader>od', '<cmd>Obsidian dailies<cr>', desc = 'Obsidian: browse dailies' },
+      -- cycle daily notes relative to the CURRENT note (older/newer day)
+      { '<leader>o[', function() obsidian_daily_step(-1) end, desc = 'Obsidian: previous day note' },
+      { '<leader>o]', function() obsidian_daily_step(1) end, desc = 'Obsidian: next day note' },
+      -- navigation within / around a note
+      { '<leader>ob', '<cmd>Obsidian backlinks<cr>', desc = 'Obsidian: backlinks' },
+      { '<leader>ol', '<cmd>Obsidian links<cr>', desc = 'Obsidian: links in note' },
+      { '<leader>ox', '<cmd>Obsidian toc<cr>', desc = 'Obsidian: table of contents' },
+      -- follow the link under cursor into a split ('<CR>' follows in place)
+      { '<leader>ov', '<cmd>Obsidian follow_link vsplit<cr>', desc = 'Obsidian: follow link in vsplit' },
+      { '<leader>oh', '<cmd>Obsidian follow_link hsplit<cr>', desc = 'Obsidian: follow link in hsplit' },
+      -- editing. <CR> (built-in smart action) cycles the SHORT set via
+      -- checkbox.order below: dash -> [ ] -> [x]. <leader>oc cycles the FULL set
+      -- of statuses by temporarily swapping in the longer order list.
+      {
+        '<leader>oc',
+        function()
+          local cfg = Obsidian.opts.checkbox
+          local saved = cfg.order
+          cfg.order = { ' ', 'x', '~', '!', '>', '' }
+          pcall(require('obsidian.actions').toggle_checkbox)
+          cfg.order = saved
+        end,
+        mode = { 'n', 'v' },
+        desc = 'Obsidian: cycle all checkbox statuses',
+      },
+      { '<leader>oT', '<cmd>Obsidian template<cr>', desc = 'Obsidian: insert template' },
+      { '<leader>oi', '<cmd>Obsidian paste_img<cr>', desc = 'Obsidian: paste image' },
+      { '<leader>or', '<cmd>Obsidian rename<cr>', desc = 'Obsidian: rename + fix links' },
+      -- visual-mode: extract / link a selection
+      { '<leader>oe', '<cmd>Obsidian extract_note<cr>', mode = 'v', desc = 'Obsidian: extract selection to note' },
+      { '<leader>ok', '<cmd>Obsidian link<cr>', mode = 'v', desc = 'Obsidian: link selection' },
+    },
+    opts = {
+      legacy_commands = false,
+      workspaces = {
+        {
+          name = 'pkm',
+          path = '~/pkm',
+        },
+      },
+      -- PJF: daily notes -> ~/pkm/daily notes/YYYY-MM-DD.md (:Obsidian today/etc).
+      -- Existing history in that folder uses YYYYMMDD; new ones use YYYY-MM-DD.
+      -- workdays_only defaults to true, which makes :Obsidian yesterday/tomorrow
+      -- skip weekends (e.g. Monday's "yesterday" = Friday); set false for literal
+      -- calendar days, matching <leader>o[ / <leader>o] which always step +/-1 day.
+      daily_notes = {
+        folder = 'daily notes',
+        date_format = 'YYYY-MM-DD',
+        workdays_only = false,
+      },
+      -- PJF: <CR> checkbox cycle (dash first). '' is the plain '- ' dash and is
+      -- order[1], so a bare line becomes a dash before a checkbox. Combined with
+      -- the obsidian_cr wrapper (strips '- [x]' back to a bare line), the full
+      -- loop is: bare -> '- ' dash -> [ ] -> [x] -> bare. The full set of statuses
+      -- is reachable via <leader>oc (see keys table above).
+      checkbox = {
+        order = { '', ' ', 'x' },
+      },
+      -- PJF: silence the spurious "conceallevel set to 0" warning. Our autocmd
+      -- (above) sets conceallevel=2 for pkm files, but obsidian's BufEnter check
+      -- can still fire transiently in a tmux-resurrect-restored window before it
+      -- runs. The custom checkbox icons are applied post-setup (see config below)
+      -- rather than via ui.checkboxes, which would warn about ordering on launch.
+      ui = {
+        ignore_conceal_warn = true,
+      },
+    },
+    config = function(_, opts)
+      require('obsidian').setup(opts)
+      -- Plain-Unicode checkbox icons (render without a Nerd Font). Set here, after
+      -- setup, so passing `ui.checkboxes` through setup() doesn't trigger the
+      -- "ui.checkboxes no longer affects ordering" warning on every launch. The
+      -- renderer reads Obsidian.opts.ui live, so these take effect. Colors
+      -- (hl_group) and cycle order (checkbox.order) are left untouched.
+      local cb = Obsidian.opts.ui.checkboxes
+      cb[' '].char, cb['x'].char = '☐', '✓'
+      cb['~'].char, cb['!'].char, cb['>'].char = '✗', '!', '→'
+
+      -- PJF: fix ]o / [o link navigation. Upstream's Note:links() (via
+      -- search.find_links) dedupes matches by link *text*, so the 2nd+ time a
+      -- link string repeats in a buffer it's dropped from the nav list. Result:
+      -- pressing ]o/[o on a line whose links all appear earlier (e.g. a summary
+      -- line repeating [[TLS]]/[[DNS]]/[[caddy]]) skips right over them. We
+      -- replace actions.nav_link (which api.nav_link, and thus ]o/[o, resolve to
+      -- at call time) with a version that lists every link occurrence by
+      -- position. Logic mirrors upstream otherwise: per-line find_refs with the
+      -- same excludes, cursor set to {line, col} so it lands on the link itself.
+      require('obsidian.actions').nav_link = function(direction)
+        local search = require 'obsidian.search'
+        local cursor_line, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
+        local matches = {}
+        for lnum, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+          for _, ref in ipairs(search.find_refs(line, { exclude = { 'BlockID', 'Tag' } })) do
+            matches[#matches + 1] = { line = lnum, start = ref[1] - 1 }
+          end
+        end
+        if direction == 'next' then
+          for i = 1, #matches do
+            local m = matches[i]
+            if (m.line > cursor_line) or (m.line == cursor_line and cursor_col < m.start) then
+              return vim.api.nvim_win_set_cursor(0, { m.line, m.start })
+            end
+          end
+        elseif direction == 'prev' then
+          for i = #matches, 1, -1 do
+            local m = matches[i]
+            if (m.line < cursor_line) or (m.line == cursor_line and cursor_col > m.start) then
+              return vim.api.nvim_win_set_cursor(0, { m.line, m.start })
+            end
+          end
+        end
+      end
+
+      -- PJF: override <CR> in vault buffers with our wrapper (adds the strip-marker
+      -- step; see obsidian_cr). The plugin re-maps <CR> on every BufEnter, so we
+      -- re-assert ours via vim.schedule (runs after the plugin's handler) on each
+      -- enter of a buffer the plugin has claimed (vim.b.obsidian_buffer).
+      vim.api.nvim_create_autocmd('BufEnter', {
+        pattern = '*.md',
+        callback = function(ev)
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(ev.buf) and vim.b[ev.buf].obsidian_buffer then
+              vim.keymap.set('n', '<CR>', obsidian_cr, { buffer = ev.buf, desc = 'Obsidian smart action (+ strip-marker cycle)' })
+            end
+          end)
+        end,
+      })
+    end,
   },
 
   -- NOTE: Plugins can also be added by using a table,
@@ -457,6 +699,7 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>o', group = '[O]bsidian', mode = { 'n', 'v' } },
       },
     },
   },
@@ -552,7 +795,13 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', function()
-        builtin.find_files { hidden = true, no_ignore = true }
+        -- PJF: explicit find_command so hidden+no-ignore work even when only rg is installed
+        -- (telescope only translates these flags for fd, not rg)
+        builtin.find_files {
+          hidden = true,
+          no_ignore = true,
+          find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--glob', '!.git/*' },
+        }
       end, { desc = '[S]earch [F]iles' })
       -- PJF: search only HTML/XHTML files
       vim.keymap.set('n', '<leader>sx', function()
