@@ -64,10 +64,28 @@ return {
   -- PJF: the plugin hardcodes its bullet-conceal to match '-', '*' AND '+'
   -- (ui.lua: `"^%s*[-%*%+] "`), with no config knob, so '*' and '+' list markers
   -- also render as '•'. Patch the marker class down to '-' only so '*' and '+'
-  -- stay literal. Runs on install/update; re-applies after :Lazy update (git pull
-  -- resets the file, then build re-patches). Both -e's make it idempotent whether
-  -- the file is upstream (`[-%*%+]`) or already partly patched.
-  build = [[sed -i -e 's/\[-%\*%+\]/[-]/' -e 's/\[-%\*\]/[-]/' lua/obsidian/ui.lua]],
+  -- stay literal. Runs on install and re-applies after every :Lazy update (the
+  -- git pull resets ui.lua, then build re-patches). A Lua function rather than a
+  -- shell string: it's cross-platform, and lazy.nvim routes any build string
+  -- ending in `.lua` to its "load a Lua file" branch instead of the shell.
+  -- Idempotent — matches the upstream class `[-%*%+]` or a half-patched `[-%*]`.
+  build = function(plugin)
+    local path = plugin.dir .. '/lua/obsidian/ui.lua'
+    local f = io.open(path, 'r')
+    if not f then
+      return
+    end
+    local content = f:read '*a'
+    f:close()
+    local patched = content:gsub('%[%-%%%*%%%+%]', '[-]'):gsub('%[%-%%%*%]', '[-]')
+    if patched ~= content then
+      local w = io.open(path, 'w')
+      if w then
+        w:write(patched)
+        w:close()
+      end
+    end
+  end,
   dependencies = {
     'nvim-lua/plenary.nvim',
   },
