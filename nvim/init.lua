@@ -1153,11 +1153,11 @@ require('lazy').setup({
       'TmuxNavigatorProcessList',
     },
     keys = {
-      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', desc = 'Navigate left (nvim split / tmux pane)' },
-      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', desc = 'Navigate down (nvim split / tmux pane)' },
-      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', desc = 'Navigate up (nvim split / tmux pane)' },
-      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', desc = 'Navigate right (nvim split / tmux pane)' },
-      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', desc = 'Navigate to previous split/pane' },
+      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', mode = { 'n', 'i' }, desc = 'Navigate left (nvim split / tmux pane)' },
+      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', mode = { 'n', 'i' }, desc = 'Navigate down (nvim split / tmux pane)' },
+      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', mode = { 'n', 'i' }, desc = 'Navigate up (nvim split / tmux pane)' },
+      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', mode = { 'n', 'i' }, desc = 'Navigate right (nvim split / tmux pane)' },
+      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', mode = { 'n', 'i' }, desc = 'Navigate to previous split/pane' },
     },
   },
 
