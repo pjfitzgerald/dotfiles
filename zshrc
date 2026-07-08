@@ -78,6 +78,7 @@ if [[ -d /mnt/c ]]; then
   alias dpirdpm='cd ~/code/clients/DPIRD/personnel-manager'
   alias ntfes='cd ~/code/clients/NTFES'
   alias qfd='cd ~/code/clients/QFD'
+  alias qfpeople='cd ~/code/clients/QFD/people'
   alias sases='cd ~/code/clients/sa-ses'
   alias agvic='cd ~/code/clients/agvic'
   alias avops='cd ~/code/clients/agvic/boards/agvic-ops'
@@ -86,6 +87,9 @@ if [[ -d /mnt/c ]]; then
   alias wcww='cd ~/code/clients/watercorp/boards/waste-discharge-reporting-rebuild/'
   alias wcfaults='cd ~/code/clients/watercorp/boards/faults-register-rebuild/'
   alias pap='cd ~/code/clients/perth-airport/'
+
+  # Juvare PKM (Obsidian vault on OneDrive)
+  alias pkm='cd "/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm"'
 fi
 
 # macOS-specific
