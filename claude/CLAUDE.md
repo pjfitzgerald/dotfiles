@@ -16,7 +16,9 @@ This file applies to all projects and provides global guidance to Claude Code.
 
 - Be concise and direct. Don't over-explain.
 - When making changes, keep working until the goal is fully achieved rather than stopping to ask for confirmation at every step.
+- **Don't fix a reported problem on an assumed diagnosis — confirm the actual symptom first.** When PJF reports an issue, distinguish what he *observed* from my *theory of the cause*. If I can't directly observe the behaviour (e.g. platform/runtime state I can't see), confirm the real symptom — ask him what he sees, or verify directly — BEFORE implementing a fix. Building on a guessed root cause risks the wrong fix and wasted push/verify cycles. This does NOT contradict "keep working without confirming at every step": once the symptom/diagnosis is actually established (observed or verified), proceed without hand-holding. The gate is specifically on *unconfirmed diagnoses*, not on execution.
 - When you discover issues or improvements during a task, fix them inline rather than just reporting them.
+- **Merging a worktree branch into `main` is confidence-gated.** When work done in a git worktree is finished, decide whether to merge it into `main` based on confidence — a judgement call, not a hard rule. If the problem was well-defined and cleanly executed (clear scope, changes validate, no shaky trial-and-error), merge the worktree branch into `main` yourself without re-asking. If the work was challenging — debugging-heavy, platform behaviour I couldn't verify, a fix built on guesses, multiple uncertain attempts — ASK before merging and leave the commits sitting on the worktree branch. This is the local merge decision ONLY: it does not relax the "never `weboard push`/`pull` (or `webeoc-lists push`) without asking" rule. When in doubt about confidence, ask — the cost of asking is low.
 - Prefer editing existing files over creating new ones.
 - Use Homebrew for package management on macOS.
 - Do not add Co-Authored-By lines to git commits.
@@ -42,6 +44,15 @@ These apply to any client board project (CSG, DPIRD, NTFES, QFD, sa-ses, waterco
 - Same principle for `webeoc-lists push` (separate tool, same caution).
 - If editing a per-view `config.json` (e.g. adding viewFilters), call out that the change won't take effect until pushed, and ASK rather than push silently.
 - Exception: PJF himself running `weboard dev` is fine — that's his development loop. The problem is *me* triggering parallel platform operations.
+
+### Pushing board lists — use `webeoc-lists`, not `weboard`
+
+Board lists (the `lists/*.json` files) are pushed with the **`webeoc-lists`** CLI, NOT `weboard`. `weboard push <name>` treats lists as `board-lists/<Name>/` subdirectory assets, so on repos that keep lists as flat `lists/*.json` it fails with `Asset "<Name>" not found`, and `weboard push --overwrite-lists` only pushes lists as a side effect of a full/asset board push — which would also deploy unreviewed display/input changes live. Don't go down that path.
+
+- Push a single list: `webeoc-lists push lists/<Name>.json --overwrite --url "$WE_URL" --username "$WE_USER" --password "$WE_PASSWORD"` (source `.env` first). `--overwrite` is **required** to update an existing list — it deletes + recreates the items; without it an already-existing list is skipped and your new item won't land.
+- `--url` is the **base `WE_URL`** from `.env` (e.g. `https://host/board`), NOT `.../api/rest.svc` — despite what `--help` shows. See the `webeoc-lists-base-url` memory.
+- **GOTCHA: a bare `webeoc-lists pull` downloads _every_ list on the server into `lists/`** — ~100 untracked files, and it overwrites/reformats the handful of tracked ones. To verify a single pushed list, pull into a throwaway scratch dir (or just trust the push output + `webeoc-lists ls`), never a bare pull in the repo. If it happens: `git checkout -- lists/<tracked files>` then `git clean -fd lists/`.
+- Same caution as `weboard push`: it's a live mutation on the shared platform — ask / confirm `weboard dev` isn't running first.
 
 ### WebEOC date format — body locale attributes pattern
 
@@ -82,3 +93,12 @@ When PJF gives a list of TODOs to action in one batch:
 - Never dump the diff or explain every line; PJF reads the diff himself.
 - If a task is ambiguous, surface as a blocker and ask, OR pick a reasonable interpretation and explicitly flag the assumption.
 - Always commit before reporting (so the diff lines up with what's described).
+
+### Jira tickets — use the `qj` CLI (`qfd-jira`)
+
+When PJF references a Jira ticket by key (e.g. `FIMS-1235`, `QFD-123`), fetch it with the `qj` CLI (`qfd-jira` — a Jira Cloud REST wrapper at `~/.local/bin/qj`) BEFORE reviewing. Don't rely on code comments or vault notes alone — they cite ACs but don't carry the discussion thread, and the actual "what's left to do" usually lives in the **newest comments**, which often supersede the original description/ACs.
+
+- `qj issue <KEY>` → full issue details + comments (JSON). This is the source of truth for requirements and the latest product-owner direction; read the newest comments first, then compare against current code state.
+- `qj issues [jql]` → search (bare status/text arg is wrapped into JQL; default is `project = $JIRA_PROJECT ORDER BY updated DESC`). `qj snapshot [outfile]` → markdown dump of the project's issues.
+- `qj raw <path> [k=v ...]` → raw GET against the v2 API for anything the subcommands don't cover.
+- **Writes are outward-facing — ask first.** Create/update/comment/transition/assign are DISABLED unless `QJ_ALLOW_WRITES=1` (one-off prefix or persisted in `~/.config/jira/qfd.env`). Treat any write as an outward-facing action and confirm with PJF first (same caution as `weboard push`). Auto-applies a `qj` label on issue-create unless `--no-qj-label`.

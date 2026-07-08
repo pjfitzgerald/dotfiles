@@ -78,6 +78,7 @@ if [[ -d /mnt/c ]]; then
   alias dpirdpm='cd ~/code/clients/DPIRD/personnel-manager'
   alias ntfes='cd ~/code/clients/NTFES'
   alias qfd='cd ~/code/clients/QFD'
+  alias qfpeople='cd ~/code/clients/QFD/people'
   alias sases='cd ~/code/clients/sa-ses'
   alias agvic='cd ~/code/clients/agvic'
   alias avops='cd ~/code/clients/agvic/boards/agvic-ops'
