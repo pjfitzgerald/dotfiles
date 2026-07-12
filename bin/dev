@@ -1,7 +1,7 @@
 #!/bin/bash
 # Dev workspace with 2 windows:
 #   Window 1 "work": ~/code/clients
-#   Window 2 "config": ~/.config
+#   Window 2 "dotfiles": ~/dotfiles
 # Each window: claude (top-left), terminal (bottom-left), nvim (right 65%)
 
 SESSION="dev"
@@ -46,9 +46,9 @@ create_layout() {
 tmux new-session -d -s "$SESSION" -n 'work' -c "$WORKDIR" -x "$(tput cols)" -y "$(tput lines)"
 create_layout "$SESSION:work" "$WORKDIR"
 
-# Window 2: config
-tmux new-window -t "$SESSION" -n 'config' -c "$CONFIGDIR"
-create_layout "$SESSION:config" "$CONFIGDIR"
+# Window 2: dotfiles
+tmux new-window -t "$SESSION" -n 'dotfiles' -c "$CONFIGDIR"
+create_layout "$SESSION:dotfiles" "$CONFIGDIR"
 
 # Window 3: misc
 tmux new-window -t "$SESSION" -n 'misc' -c "$HOME"

@@ -118,6 +118,23 @@ vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
 end)
 
+-- PJF: On WSL, force win32yank.exe — the WSLg X clipboard bridge is unreliable,
+-- and nvim otherwise auto-picks xclip which doesn't sync to the Windows clipboard.
+if vim.fn.has 'wsl' == 1 and vim.fn.executable 'win32yank.exe' == 1 then
+  vim.g.clipboard = {
+    name = 'win32yank-wsl',
+    copy = {
+      ['+'] = 'win32yank.exe -i --crlf',
+      ['*'] = 'win32yank.exe -i --crlf',
+    },
+    paste = {
+      ['+'] = 'win32yank.exe -o --lf',
+      ['*'] = 'win32yank.exe -o --lf',
+    },
+    cache_enabled = 0,
+  }
+end
+
 -- Enable break indent
 vim.o.breakindent = true
 
@@ -1334,6 +1351,10 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+  -- PJF: obsidian.nvim (community fork) lives in its own module, loaded just
+  -- below via `require 'custom.plugins.obsidian'`. The old epwalsh/obsidian.nvim
+  -- spec that used to sit here was the dead fork and has been removed.
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -1363,6 +1384,29 @@ require('lazy').setup({
   -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+
+  -- PJF: vim-tmux-navigator -- unified C-hjkl navigation across nvim splits and
+  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via TPM)
+  {
+    'christoomey/vim-tmux-navigator',
+    cmd = {
+      'TmuxNavigateLeft',
+      'TmuxNavigateDown',
+      'TmuxNavigateUp',
+      'TmuxNavigateRight',
+      'TmuxNavigatePrevious',
+      'TmuxNavigatorProcessList',
+    },
+    keys = {
+      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', mode = { 'n', 'i' }, desc = 'Navigate left (nvim split / tmux pane)' },
+      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', mode = { 'n', 'i' }, desc = 'Navigate down (nvim split / tmux pane)' },
+      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', mode = { 'n', 'i' }, desc = 'Navigate up (nvim split / tmux pane)' },
+      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', mode = { 'n', 'i' }, desc = 'Navigate right (nvim split / tmux pane)' },
+      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', mode = { 'n', 'i' }, desc = 'Navigate to previous split/pane' },
+    },
+  },
+
+  require 'custom.plugins.obsidian',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.

@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Recreate the "agents" window: 4 columns × 2 rows (8 panes).
+#
+#   Col 1: claude @ workstream-1 (top) / claude @ workstream-4 (bottom)
+#   Col 2: claude @ workstream-2 (top) / claude @ workstream-5 (bottom)
+#   Col 3: claude @ workstream-3 (top) / claude @ workstream-6 (bottom)
+#   Col 4: bare shell (top)            / nvim   @ project root (bottom)
+#
+# i.e. six claude worktrees (ws-1..3 across the top, ws-4..6 across the
+# bottom), a terminal top-right, and nvim bottom-right.
+#
+# The columns are built first (left→right) and evened with even-horizontal,
+# then each is split 50/50 top/bottom. That yields a clean even grid at any
+# terminal size (no hardcoded pixel geometry to go stale), and a leaf order of
+# col1-top, col1-bottom, col2-top, … so pane ids map predictably. Commands are
+# sent by pane id, so the mapping holds regardless of base-index / renumber.
+#
+# Usage: tmux-agents [PROJECT_DIR]
+#   PROJECT_DIR defaults to $PWD. It must contain .claude/worktrees/workstream-1
+#   … workstream-6 (create those worktrees first).
+
+set -euo pipefail
+
+PROJECT="${1:-$PWD}"
+WT="$PROJECT/.claude/worktrees"
+
+# Fail early with a clear message if the expected worktrees are missing, rather
+# than letting `tmux -c` choke on a nonexistent directory.
+for n in 1 2 3 4 5 6; do
+  if [ ! -d "$WT/workstream-$n" ]; then
+    echo "tmux-agents: missing worktree $WT/workstream-$n" >&2
+    echo "  create the workstream-1..6 worktrees under $PROJECT/.claude/worktrees first." >&2
+    exit 1
+  fi
+done
+
+# --- build the 4 columns -----------------------------------------------------
+c1=$(tmux new-window -n agents -c "$WT/workstream-1" -P -F '#{pane_id}')
+c2=$(tmux split-window -h -t "$c1" -c "$WT/workstream-2" -P -F '#{pane_id}')
+c3=$(tmux split-window -h -t "$c2" -c "$WT/workstream-3" -P -F '#{pane_id}')
+c4=$(tmux split-window -h -t "$c3" -c "$PROJECT"          -P -F '#{pane_id}')
+tmux select-layout -t "$c1" even-horizontal
+
+# --- split each column into top/bottom ---------------------------------------
+b1=$(tmux split-window -v -t "$c1" -c "$WT/workstream-4" -P -F '#{pane_id}')
+b2=$(tmux split-window -v -t "$c2" -c "$WT/workstream-5" -P -F '#{pane_id}')
+b3=$(tmux split-window -v -t "$c3" -c "$WT/workstream-6" -P -F '#{pane_id}')
+b4=$(tmux split-window -v -t "$c4" -c "$PROJECT"          -P -F '#{pane_id}')
+
+# --- launch the processes (c4 is left as a bare shell) -----------------------
+tmux send-keys -t "$c1" 'claude' Enter   # col1 top    → workstream-1
+tmux send-keys -t "$b1" 'claude' Enter   # col1 bottom → workstream-4
+tmux send-keys -t "$c2" 'claude' Enter   # col2 top    → workstream-2
+tmux send-keys -t "$b2" 'claude' Enter   # col2 bottom → workstream-5
+tmux send-keys -t "$c3" 'claude' Enter   # col3 top    → workstream-3
+tmux send-keys -t "$b3" 'claude' Enter   # col3 bottom → workstream-6
+                                         # col4 top    ($c4): bare terminal
+tmux send-keys -t "$b4" 'nvim'   Enter   # col4 bottom → project root
+
+tmux select-pane -t "$c1"
