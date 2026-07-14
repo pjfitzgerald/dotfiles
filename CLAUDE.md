@@ -33,6 +33,7 @@ All custom changes in `init.lua` are marked with `-- PJF:` comments:
 
 - `<leader>e` toggles Neo-tree file browser
 - `<leader>y`/`<leader>p` mappings for system clipboard copy/paste
+- `<leader>df` prompts for two file paths and opens them in codediff.nvim (`:CodeDiff file`)
 - `NODE_EXTRA_CA_CERTS` environment variable set to work around corporate proxy SSL certificate issues
 - GitHub Copilot plugin added (accepts suggestions with `<C-l>`, Tab is not mapped to avoid conflict with blink.cmp)
 - LSP servers configured: `pyright`, `ts_ls`, `ruby_lsp`, `lua_ls`

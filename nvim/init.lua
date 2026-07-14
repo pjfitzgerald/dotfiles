@@ -178,6 +178,15 @@ vim.o.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
+-- PJF: Treesitter-based folding (e.g. folds markdown by heading, nested).
+-- Requires the relevant parser to be installed (:TSInstall <lang>).
+-- foldlevelstart=99 keeps everything open on file open; zM to collapse.
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+
 -- PJF: Use LF line endings instead of CRLF (WSL only — avoids issues editing files shared with Windows)
 if vim.fn.has 'wsl' == 1 then
   vim.o.fileformat = 'unix'
@@ -266,6 +275,21 @@ vim.keymap.set('v', '<leader>P', '"+P')
 vim.keymap.set('n', '<leader>fp', function()
   vim.cmd 'echo expand("%:p")'
 end, { desc = '[F]ile [P]ath' })
+
+-- PJF: codediff.nvim - compare two files
+vim.keymap.set('n', '<leader>df', function()
+  vim.ui.input({ prompt = 'File A: ', completion = 'file' }, function(file_a)
+    if not file_a or file_a == '' then
+      return
+    end
+    vim.ui.input({ prompt = 'File B: ', completion = 'file' }, function(file_b)
+      if not file_b or file_b == '' then
+        return
+      end
+      vim.cmd('CodeDiff file ' .. vim.fn.fnameescape(file_a) .. ' ' .. vim.fn.fnameescape(file_b))
+    end)
+  end)
+end, { desc = '[D]iff [F]iles' })
 
 -- PJF: open the pkm vault in a NEW tmux window (named 'pkm', cwd ~/pkm, running
 -- nvim on the vault). A new window beats a pane (cramped for a whole vault) or a
@@ -852,6 +876,7 @@ require('lazy').setup({
       spec = {
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
+        { '<leader>d', group = '[D]iff' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
         { '<leader>o', group = '[O]bsidian', mode = { 'n', 'v' } },
       },
