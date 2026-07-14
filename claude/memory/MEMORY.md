@@ -16,6 +16,10 @@
 - [project_freshrss.md](project_freshrss.md) — migrated to t480 2026-06-27, fully local SQLite (no NFS), port 8085; old dsfitz container stopped
 - [project_memos.md](project_memos.md) — note/memo service set up fresh on t480 2026-06-28, fully local SQLite (no NFS), port 5230
 - [project_audiobookshelf.md](project_audiobookshelf.md) — Audiobookshelf on t480 (config/DB local) with audio on dsfitz /volume2/data over NFS
+- [t480-server.md](t480-server.md) — t480 home server: Ubuntu 25.10, LUKS root, Comet Pro KVM, kdump boot-hang fix + debug recipe, SSH/sudo details
+- [karakeep-t480.md](karakeep-t480.md) — bookmark stack moved off dsfitz to t480; compose dir, Tailscale node, management, rollback
+- [jellyfin-dsfitz.md](jellyfin-dsfitz.md) — Jellyfin on dsfitz, now primary media player (Plex kept as backup): admin login, libraries, ports, compose
+- [immich-go-dsfitz.md](immich-go-dsfitz.md) — upload NAS folders to Immich via immich-go on dsfitz: binary path, server/key, folder-as-album, SSH gotchas
 
 ## References
 - [reference_obsidian_vault.md](reference_obsidian_vault.md) — Obsidian vault access via symlink at ~/obsidian-vault (use Read/Write tools, not MCP)
