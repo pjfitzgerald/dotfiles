@@ -14,7 +14,7 @@ This file applies to all projects and provides global guidance to Claude Code.
 
 ## Preferences
 
-- Be concise and direct. Don't over-explain.
+- Be concise and direct. Don't over-explain. This is very important – it becomes very fatiguing reading overly verbose responses. I don't want to miss out on critical information from you overly cutting your responses short, but please be absolutely as concise as possible without withholding information.
 - When making changes, keep working until the goal is fully achieved rather than stopping to ask for confirmation at every step.
 - **Don't fix a reported problem on an assumed diagnosis — confirm the actual symptom first.** When PJF reports an issue, distinguish what he *observed* from my *theory of the cause*. If I can't directly observe the behaviour (e.g. platform/runtime state I can't see), confirm the real symptom — ask him what he sees, or verify directly — BEFORE implementing a fix. Building on a guessed root cause risks the wrong fix and wasted push/verify cycles. This does NOT contradict "keep working without confirming at every step": once the symptom/diagnosis is actually established (observed or verified), proceed without hand-holding. The gate is specifically on *unconfirmed diagnoses*, not on execution.
 - When you discover issues or improvements during a task, fix them inline rather than just reporting them.

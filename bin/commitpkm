@@ -1,0 +1,88 @@
+#!/bin/bash
+# commitpkm — commit and push the PKM (Obsidian) vault to GitHub.
+#
+# Ported from the original macOS script. The t480 is the canonical committer:
+# other devices edit the same vault and sync the files via Syncthing; only the
+# t480 records git history / pushes to GitHub for backup. Keeping a single
+# committer avoids divergent histories / merge conflicts in the repo.
+#
+# Usage:
+#   commitpkm                # commit everything, message = current timestamp
+#   commitpkm "my message"   # commit everything with a custom message
+#
+# Differences from the mac original (intentional):
+#   - vault path is $HOME/pkm (override with $PKM_VAULT) instead of the
+#     hardcoded /Users/patrickfitzgerald/pkm, so it runs on any machine.
+#   - optional commit-message argument (default is still the bare timestamp).
+#   - skips when the tree is clean (avoids a failing empty commit + no-op push).
+#   - pull --rebase before pushing, so a diverged remote replays cleanly onto
+#     a linear history instead of the push being rejected. No-op while the t480
+#     is the sole committer; cheap insurance if another machine ever commits.
+
+pkmpath="${PKM_VAULT:-$HOME/pkm}"
+
+echo ""
+echo ""
+echo ""
+
+echo "changing working directory to 'pkm'..."
+cd "$pkmpath" || { echo "commitpkm: cannot cd to $pkmpath"; exit 1; }
+
+echo ""
+echo ""
+echo ""
+
+echo "current directory:"
+pwd
+
+echo ""
+echo ""
+echo ""
+
+echo "checking git status..."
+
+echo ""
+echo ""
+echo ""
+
+git status
+
+echo ""
+echo ""
+echo ""
+
+# Nothing to commit? Stop here (the original would fall through to a failing
+# "nothing to commit" + a no-op push).
+if [ -z "$(git status --porcelain)" ]; then
+  echo "vault clean, nothing to commit. done."
+  exit 0
+fi
+
+echo "adding ..."
+git add .
+
+echo ""
+echo ""
+echo ""
+
+echo "committing ..."
+git commit -m "${1:-$(date +'%Y-%m-%d %T')}"
+
+echo ""
+echo ""
+echo ""
+
+# Replay our commit onto any remote commits before pushing. A no-op while the
+# t480 is the sole committer; if it ever hits a conflict it stops here (rebase
+# in progress) rather than pushing a broken state.
+echo "pulling (rebase)..."
+git pull --rebase origin master || { echo "commitpkm: pull --rebase hit a conflict; resolve it, then 'git rebase --continue' and 'git push'."; exit 1; }
+
+echo ""
+echo ""
+echo ""
+
+echo "pushing..."
+git push origin master
+
+echo "done."

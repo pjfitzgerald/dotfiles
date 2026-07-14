@@ -10,12 +10,13 @@
 ## Projects
 - [project_pkm_sync.md](project_pkm_sync.md) — PKM syncs via Syncthing (folder ID ztety-fltwy) + git; .git excluded from Syncthing
 - [project_homelab.md](project_homelab.md) — selfhosting inventory: dsfitz NAS (storage, RAM-constrained) + t480 (always-on compute); app-on-t480/data-on-NAS-via-NFS pattern
-- [project_nextcloud.md](project_nextcloud.md) — runs on t480 w/ data on dsfitz via NFS; dsfitz is RAM-constrained (3.8 GB)
-- [project_paperless.md](project_paperless.md) — migrated to t480 (OCR/SQLite) w/ documents on dsfitz via NFS; old dsfitz container left stopped
-- [project_arr.md](project_arr.md) — Prowlarr/Sonarr/Radarr/Lidarr on t480, qBittorrent+Plex on dsfitz, /data shared via NFS; migrated 2026-06-23
-- [project_freshrss.md](project_freshrss.md) — migrated to t480 2026-06-27, fully local SQLite (no NFS), port 8085; old dsfitz container stopped
-- [project_memos.md](project_memos.md) — note/memo service set up fresh on t480 2026-06-28, fully local SQLite (no NFS), port 5230
+- [project_nextcloud.md](project_nextcloud.md) — Nextcloud runs on t480 w/ data on dsfitz via NFS; dsfitz is RAM-constrained (3.8 GB)
+- [project_paperless.md](project_paperless.md) — Paperless migrated to t480 (OCR/SQLite) w/ documents on dsfitz via NFS; old dsfitz container left stopped
+- [project_arr.md](project_arr.md) — *arr stack: Prowlarr/Sonarr/Radarr/Lidarr on t480, qBittorrent+Plex on dsfitz, /data shared via NFS; migrated 2026-06-23
+- [project_freshrss.md](project_freshrss.md) — FreshRSS migrated to t480 2026-06-27, fully local SQLite (no NFS), port 8085; old dsfitz container stopped
+- [project_memos.md](project_memos.md) — Memos note service set up fresh on t480 2026-06-28, fully local SQLite (no NFS), port 5230
 - [project_audiobookshelf.md](project_audiobookshelf.md) — Audiobookshelf on t480 (config/DB local) with audio on dsfitz /volume2/data over NFS
+- [project_calibre.md](project_calibre.md) — Calibre-Web-Automated on dsfitz: swap-thrash failure modes + s6-rc recovery without full container restart
 - [t480-server.md](t480-server.md) — t480 home server: Ubuntu 25.10, LUKS root, Comet Pro KVM, kdump boot-hang fix + debug recipe, SSH/sudo details
 - [karakeep-t480.md](karakeep-t480.md) — bookmark stack moved off dsfitz to t480; compose dir, Tailscale node, management, rollback
 - [jellyfin-dsfitz.md](jellyfin-dsfitz.md) — Jellyfin on dsfitz, now primary media player (Plex kept as backup): admin login, libraries, ports, compose

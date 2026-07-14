@@ -149,3 +149,6 @@ export VISUAL=nvim
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+
+# railway
+export PATH="$HOME/.railway/bin:$PATH"
