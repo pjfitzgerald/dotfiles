@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a personal dotfiles repository (`~/dotfiles`), used across macOS (personal) and WSL/Windows (work). The primary content is a **kickstart.nvim**-based Neovim configuration with custom modifications, plus shell, tmux, and Claude Code config.
 
+## opencode
+
+[opencode](https://opencode.ai) is set up to **coexist** with Claude Code (not replace it). It reuses the Claude config to avoid duplication:
+
+- **Rules** — opencode falls back to `~/.claude/CLAUDE.md` (the user-level rules). No `~/.config/opencode/AGENTS.md` exists, on purpose, so that file stays the single source of truth.
+- **Skills** — opencode reads `~/.claude/skills/*/SKILL.md` natively, so all custom skills load unchanged.
+- **opencode-specific config** lives in `opencode/` and is symlinked to `~/.config/opencode/` by `install.sh`:
+  - `opencode/opencode.json` — provider/model (OpenRouter) and permissions.
+  - `opencode/tui.json` — theme (`tokyonight`, matching nvim) and TUI prefs.
+- **Auth** is one-time and not committed: `opencode auth login` → OpenRouter.
+- **Not ported:** Claude Code harness features with no opencode equivalent (voice, push notifications, Anthropic-shipped commands like `/code-review`, `/loop`), and the `claude/memory/` recall system (no native opencode equivalent — skipped for now).
+
 ## Neovim Config Structure
 
 The nvim config is based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) — a single-file starting point, not a distribution.

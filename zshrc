@@ -142,6 +142,10 @@ elif [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
+# Default editor (used by opencode's editor_open, git, etc.)
+export EDITOR=nvim
+export VISUAL=nvim
+
 # opencode
-export PATH=/Users/patrickfitzgerald/.opencode/bin:$PATH
+export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"

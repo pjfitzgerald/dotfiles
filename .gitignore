@@ -29,6 +29,10 @@ tmux/plugins/
 !claude/
 !claude/**
 
+# opencode config
+!opencode/
+!opencode/**
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/

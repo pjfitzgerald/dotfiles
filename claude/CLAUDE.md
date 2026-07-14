@@ -5,8 +5,8 @@ This file applies to all projects and provides global guidance to Claude Code.
 ## About Me
 
 - I go by PJF
-- macOS (Apple Silicon) is my primary development environment
-- I also work in WSL environments
+- ubuntu linux is my current primary development environment
+- I also work in WSL and macOS (Apple Silicon) environments
 - Editor: Neovim (kickstart.nvim-based config)
 - Terminal multiplexer: tmux
 - Shell: zsh

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+
+  // opencode TUI preferences. Symlinked to ~/.config/opencode/tui.json by install.sh.
+
+  // Matches the Neovim colorscheme (tokyonight-night).
+  "theme": "tokyonight"
+
+  // Vim editing: opencode's prompt has no single "vim mode" toggle (unlike Claude Code's
+  // editorMode: vim). Instead, the `editor_open` keybind opens $EDITOR (nvim) to compose
+  // long prompts with full vim. install.sh / zshrc sets EDITOR=nvim so this works.
+  // Customise individual keys here if desired, e.g.:
+  //   "keybinds": { "editor_open": "<leader>e" }
+}

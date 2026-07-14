@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Global opencode config. Coexists with Claude Code.
+  //
+  // Rules:  opencode falls back to ~/.claude/CLAUDE.md (no AGENTS.md here on purpose,
+  //         so that file stays the single source of truth shared with Claude Code).
+  // Skills: opencode reads ~/.claude/skills/*/SKILL.md natively (symlinked from the repo
+  //         by install.sh) — all 7 custom skills load unchanged. Nothing to configure.
+  // Memory: claude/memory/ has no native opencode recall — intentionally skipped for now.
+  //
+  // Auth (one-time, not committed): `opencode auth login` -> OpenRouter -> paste API key.
+
+  // Confirm exact OpenRouter slugs with `opencode models` after auth, then adjust.
+  "model": "openrouter/anthropic/claude-opus-4.8",
+  "small_model": "openrouter/anthropic/claude-haiku-4.5",
+
+  // Roughly mirror day-to-day Claude Code behaviour. Tune to taste.
+  "permission": {
+    "edit": "allow",
+    "bash": "ask",
+    "webfetch": "allow"
+  }
+}
