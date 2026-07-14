@@ -369,6 +369,51 @@ local function obsidian_daily_step(delta)
   require('obsidian.daily').daily({ date = anchor + delta * 24 * 3600 }):open()
 end
 
+-- PJF: weekly notes. obsidian.nvim has no native weekly/periodic-notes feature
+-- (only daily_notes), so this is a small custom impl mirroring the daily flow
+-- above. Notes live in ~/pkm/weekly notes/ named YYYY-MM-DD_weekly_note where the
+-- date is the MONDAY of that week, so both Neovim and the desktop Periodic Notes
+-- plugin open/create the same files on the synced vault (match its weekly format
+-- 'YYYY-MM-DD_weekly_note' + folder 'weekly notes' to interoperate). No template.
+local function obsidian_monday_of(t)
+  -- Normalise to noon first so the whole-day subtraction below can't slip a day
+  -- across a DST boundary.
+  local parts = os.date('*t', t)
+  parts.hour, parts.min, parts.sec = 12, 0, 0
+  local noon = os.time(parts)
+  local wday = os.date('*t', noon).wday -- 1=Sun .. 7=Sat
+  local days_since_monday = (wday + 5) % 7 -- Mon(2)->0, Sun(1)->6
+  return noon - days_since_monday * 24 * 3600
+end
+
+-- Open (or create) the weekly note for the week containing `datetime`.
+local function obsidian_open_weekly(datetime)
+  local Path = require 'obsidian.path'
+  local Note = require 'obsidian.note'
+  local monday = obsidian_monday_of(datetime)
+  local id = os.date('%Y-%m-%d', monday) .. '_weekly_note'
+  local path = Path.new(Obsidian.dir) / 'weekly notes' / (id .. '.md')
+  local note
+  if path:exists() then
+    note = Note.from_file(path)
+  else
+    -- verbatim so the '_weekly_note' id isn't slugified; write() applies the
+    -- vault's default frontmatter (same as a daily note), no body template.
+    note = Note.create { id = id, verbatim = true, aliases = {}, tags = {}, dir = path:parent() }
+    note:write()
+  end
+  note:open()
+end
+
+-- Used by <leader>o{ / <leader>o} to step weeks relative to the CURRENT note when
+-- it's a weekly note, else relative to today (mirrors obsidian_daily_step).
+local function obsidian_weekly_step(delta)
+  local stem = vim.fn.expand '%:t:r'
+  local y, m, d = stem:match '^(%d%d%d%d)%-(%d%d)%-(%d%d)_weekly_note$'
+  local anchor = y and os.time { year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 } or os.time()
+  obsidian_open_weekly(anchor + delta * 7 * 24 * 3600)
+end
+
 -- PJF: <CR> wrapper for obsidian notes. The built-in checkbox cycle (smart_action
 -- + checkbox.order = {' ','x',''}) goes [ ] -> [x] -> '- ' dash -> back to [ ], but
 -- it can't REMOVE the list marker. This adds a 'no-dash / bare line' stop: on a
@@ -393,6 +438,42 @@ local function obsidian_cr()
   -- a returned literal '<CR>' runs the default action and never recurses into this)
   local keys = api.smart_action()
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+end
+
+-- PJF: visual-mode counterpart to obsidian_cr. Applies the same short-cycle
+-- checkbox toggle (bare -> '- ' dash -> [ ] -> [x] -> bare) to every line in
+-- the visual selection instead of just the cursor line. The plugin's own
+-- toggle_checkbox (used by <leader>oc) already loops over a visual range, but
+-- like smart_action it can't remove the list marker -- it only cycles
+-- '- [x]' back to a '- ' dash, not all the way to bare. So per line we check
+-- for '- [x]' first and strip the whole prefix ourselves, same as
+-- obsidian_cr, and otherwise fall back to the plugin's own per-line toggle
+-- (actions._toggle_checkbox) for the bare/dash/[ ] steps.
+--
+-- Deliberately reads the range with line('v')/line('.') instead of
+-- obsidian.api.get_visual_selection, which feedkeys an <Esc> and drops the
+-- selection -- that made <CR> a one-shot action requiring reselection to
+-- cycle again. Left untouched (no <Esc>, no cursor move), Neovim keeps the
+-- visual selection active after the callback returns, so <CR> can be pressed
+-- repeatedly to keep cycling the same lines through the states.
+local function obsidian_cr_visual()
+  local actions = require 'obsidian.actions'
+  local start_lnum, end_lnum = vim.fn.line 'v', vim.fn.line '.'
+  if start_lnum > end_lnum then
+    start_lnum, end_lnum = end_lnum, start_lnum
+  end
+  local order = Obsidian.opts.checkbox.order
+  for lnum = start_lnum, end_lnum do
+    local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, false)[1]
+    if line then
+      local indent, body = line:match '^(%s*)%- %[x%]%s?(.*)$'
+      if indent then
+        vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, true, { indent .. body })
+      elseif line:match '%S' or Obsidian.opts.checkbox.create_new then
+        actions._toggle_checkbox(order, lnum)
+      end
+    end
+  end
 end
 
 -- NOTE: Here is where you install your plugins.
@@ -447,10 +528,29 @@ require('lazy').setup({
     -- PJF: the plugin hardcodes its bullet-conceal to match '-', '*' AND '+'
     -- (ui.lua: `"^%s*[-%*%+] "`), with no config knob, so '*' and '+' list
     -- markers also render as '•'. Patch the marker class down to '-' only so '*'
-    -- and '+' stay literal. Runs on install/update; re-applies after :Lazy update
-    -- (git pull resets the file, then build re-patches). Both -e's make it
-    -- idempotent whether the file is upstream (`[-%*%+]`) or already partly patched.
-    build = [[sed -i -e 's/\[-%\*%+\]/[-]/' -e 's/\[-%\*\]/[-]/' lua/obsidian/ui.lua]],
+    -- and '+' stay literal. Runs on install and re-applies after every :Lazy
+    -- update (the git pull resets ui.lua, then build re-patches). A Lua function
+    -- rather than a shell string: it's cross-platform, and lazy.nvim routes any
+    -- build string ending in `.lua` to its "load a Lua file" branch instead of
+    -- the shell. Idempotent — matches the upstream class `[-%*%+]` or a
+    -- half-patched `[-%*]`.
+    build = function(plugin)
+      local path = plugin.dir .. '/lua/obsidian/ui.lua'
+      local f = io.open(path, 'r')
+      if not f then
+        return
+      end
+      local content = f:read '*a'
+      f:close()
+      local patched = content:gsub('%[%-%%%*%%%+%]', '[-]'):gsub('%[%-%%%*%]', '[-]')
+      if patched ~= content then
+        local w = io.open(path, 'w')
+        if w then
+          w:write(patched)
+          w:close()
+        end
+      end
+    end,
     dependencies = {
       'nvim-lua/plenary.nvim',
     },
@@ -466,8 +566,44 @@ require('lazy').setup({
       { '<leader>om', '<cmd>Obsidian tomorrow<cr>', desc = 'Obsidian: tomorrow' },
       { '<leader>od', '<cmd>Obsidian dailies<cr>', desc = 'Obsidian: browse dailies' },
       -- cycle daily notes relative to the CURRENT note (older/newer day)
-      { '<leader>o[', function() obsidian_daily_step(-1) end, desc = 'Obsidian: previous day note' },
-      { '<leader>o]', function() obsidian_daily_step(1) end, desc = 'Obsidian: next day note' },
+      {
+        '<leader>o[',
+        function()
+          obsidian_daily_step(-1)
+        end,
+        desc = 'Obsidian: previous day note',
+      },
+      {
+        '<leader>o]',
+        function()
+          obsidian_daily_step(1)
+        end,
+        desc = 'Obsidian: next day note',
+      },
+      -- weekly notes (custom; see obsidian_open_weekly). Monday-anchored,
+      -- ~/pkm/weekly notes/YYYY-MM-DD_weekly_note.md. Braces step weeks, paralleling
+      -- the brackets that step days above.
+      {
+        '<leader>ow',
+        function()
+          obsidian_open_weekly(os.time())
+        end,
+        desc = 'Obsidian: this week',
+      },
+      {
+        '<leader>o{',
+        function()
+          obsidian_weekly_step(-1)
+        end,
+        desc = 'Obsidian: previous week note',
+      },
+      {
+        '<leader>o}',
+        function()
+          obsidian_weekly_step(1)
+        end,
+        desc = 'Obsidian: next week note',
+      },
       -- navigation within / around a note
       { '<leader>ob', '<cmd>Obsidian backlinks<cr>', desc = 'Obsidian: backlinks' },
       { '<leader>ol', '<cmd>Obsidian links<cr>', desc = 'Obsidian: links in note' },
@@ -588,6 +724,7 @@ require('lazy').setup({
           vim.schedule(function()
             if vim.api.nvim_buf_is_valid(ev.buf) and vim.b[ev.buf].obsidian_buffer then
               vim.keymap.set('n', '<CR>', obsidian_cr, { buffer = ev.buf, desc = 'Obsidian smart action (+ strip-marker cycle)' })
+              vim.keymap.set('v', '<CR>', obsidian_cr_visual, { buffer = ev.buf, desc = 'Obsidian: cycle checkbox status (visual)' })
             end
           end)
         end,
