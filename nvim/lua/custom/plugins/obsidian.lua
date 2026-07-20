@@ -16,6 +16,36 @@
 -- same file works on both boxes.
 local vault_path = vim.fn.has 'wsl' == 1 and '/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm' or vim.fn.expand '~/pkm'
 
+-- PJF: note IDs = the title, verbatim. The plugin's default (builtin.zettel_id)
+-- names the file with a random ID, so every link comes out as the ugly
+-- [[1784423843-GDXI|otcom -- task archive]] id+alias form. The built-in
+-- builtin.title_id isn't right either -- it slugs to lowercase-hyphenated, but
+-- this vault's filenames keep spaces and case ('claude project hub note.md'). So
+-- use the title as-is (minus characters that are illegal in a filename), which
+-- makes links just [[otcom -- task archive]]. Falls back to a zettel id for
+-- untitled notes, and appends -2, -3, ... if the name is already taken.
+local function obsidian_title_id(title, dir)
+  local builtin = require 'obsidian.builtin'
+  if type(title) ~= 'string' then
+    return builtin.zettel_id()
+  end
+  -- strip path separators and characters Windows/WSL reject in filenames
+  local base = vim.trim((title:gsub('[/\\:%*%?"<>|]', '')))
+  if base == '' then
+    return builtin.zettel_id()
+  end
+  if not dir then
+    return base
+  end
+  local Path = require 'obsidian.path'
+  local candidate, idx = base, 2
+  while (Path.new(dir) / candidate):with_suffix('.md', true):exists() do
+    candidate = string.format('%s-%d', base, idx)
+    idx = idx + 1
+  end
+  return candidate
+end
+
 -- PJF: step to the previous/next day's daily note RELATIVE TO THE CURRENT NOTE.
 -- The built-in :Obsidian yesterday/tomorrow are relative to the system date, so
 -- they don't "cycle" when you're already viewing an older daily note. This parses
@@ -30,6 +60,51 @@ local function obsidian_daily_step(delta)
   end
   local anchor = y and os.time { year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 } or os.time()
   require('obsidian.daily').daily({ date = anchor + delta * 24 * 3600 }):open()
+end
+
+-- PJF: weekly notes. obsidian.nvim has no native weekly/periodic-notes feature
+-- (only daily_notes), so this is a small custom impl mirroring the daily flow
+-- above. Notes live in <vault>/weekly notes/ named YYYY-MM-DD_weekly_note where
+-- the date is the MONDAY of that week, so both Neovim and the desktop Periodic
+-- Notes plugin open/create the same files on the synced vault (match its weekly
+-- format 'YYYY-MM-DD_weekly_note' + folder 'weekly notes' to interoperate).
+local function obsidian_monday_of(t)
+  -- Normalise to noon first so the whole-day subtraction below can't slip a day
+  -- across a DST boundary.
+  local parts = os.date('*t', t)
+  parts.hour, parts.min, parts.sec = 12, 0, 0
+  local noon = os.time(parts)
+  local wday = os.date('*t', noon).wday -- 1=Sun .. 7=Sat
+  local days_since_monday = (wday + 5) % 7 -- Mon(2)->0, Sun(1)->6
+  return noon - days_since_monday * 24 * 3600
+end
+
+-- Open (or create) the weekly note for the week containing `datetime`.
+local function obsidian_open_weekly(datetime)
+  local Path = require 'obsidian.path'
+  local Note = require 'obsidian.note'
+  local monday = obsidian_monday_of(datetime)
+  local id = os.date('%Y-%m-%d', monday) .. '_weekly_note'
+  local path = Path.new(Obsidian.dir) / 'weekly notes' / (id .. '.md')
+  local note
+  if path:exists() then
+    note = Note.from_file(path)
+  else
+    -- verbatim so the '_weekly_note' id isn't slugified; write() applies the
+    -- vault's default frontmatter (same as a daily note), no body template.
+    note = Note.create { id = id, verbatim = true, aliases = {}, tags = {}, dir = path:parent() }
+    note:write()
+  end
+  note:open()
+end
+
+-- Used by <leader>o{ / <leader>o} to step weeks relative to the CURRENT note when
+-- it's a weekly note, else relative to today (mirrors obsidian_daily_step).
+local function obsidian_weekly_step(delta)
+  local stem = vim.fn.expand '%:t:r'
+  local y, m, d = stem:match '^(%d%d%d%d)%-(%d%d)%-(%d%d)_weekly_note$'
+  local anchor = y and os.time { year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 } or os.time()
+  obsidian_open_weekly(anchor + delta * 7 * 24 * 3600)
 end
 
 -- PJF: <CR> wrapper for obsidian notes. The built-in checkbox cycle (smart_action
@@ -54,6 +129,42 @@ local function obsidian_cr()
   -- a returned literal '<CR>' runs the default action and never recurses into this)
   local keys = api.smart_action()
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+end
+
+-- PJF: visual-mode counterpart to obsidian_cr. Applies the same short-cycle
+-- checkbox toggle (bare -> '- ' dash -> [ ] -> [x] -> bare) to every line in
+-- the visual selection instead of just the cursor line. The plugin's own
+-- toggle_checkbox (used by <leader>oc) already loops over a visual range, but
+-- like smart_action it can't remove the list marker -- it only cycles
+-- '- [x]' back to a '- ' dash, not all the way to bare. So per line we check
+-- for '- [x]' first and strip the whole prefix ourselves, same as
+-- obsidian_cr, and otherwise fall back to the plugin's own per-line toggle
+-- (actions._toggle_checkbox) for the bare/dash/[ ] steps.
+--
+-- Deliberately reads the range with line('v')/line('.') instead of
+-- obsidian.api.get_visual_selection, which feedkeys an <Esc> and drops the
+-- selection -- that made <CR> a one-shot action requiring reselection to
+-- cycle again. Left untouched (no <Esc>, no cursor move), Neovim keeps the
+-- visual selection active after the callback returns, so <CR> can be pressed
+-- repeatedly to keep cycling the same lines through the states.
+local function obsidian_cr_visual()
+  local actions = require 'obsidian.actions'
+  local start_lnum, end_lnum = vim.fn.line 'v', vim.fn.line '.'
+  if start_lnum > end_lnum then
+    start_lnum, end_lnum = end_lnum, start_lnum
+  end
+  local order = Obsidian.opts.checkbox.order
+  for lnum = start_lnum, end_lnum do
+    local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, false)[1]
+    if line then
+      local indent, body = line:match '^(%s*)%- %[x%]%s?(.*)$'
+      if indent then
+        vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, true, { indent .. body })
+      elseif line:match '%S' or Obsidian.opts.checkbox.create_new then
+        actions._toggle_checkbox(order, lnum)
+      end
+    end
+  end
 end
 
 return {
@@ -145,6 +256,30 @@ return {
       end,
       desc = 'Obsidian: next day note',
     },
+    -- weekly notes (custom; see obsidian_open_weekly). Monday-anchored,
+    -- <vault>/weekly notes/YYYY-MM-DD_weekly_note.md. Braces step weeks,
+    -- paralleling the brackets that step days above.
+    {
+      '<leader>ow',
+      function()
+        obsidian_open_weekly(os.time())
+      end,
+      desc = 'Obsidian: this week',
+    },
+    {
+      '<leader>o{',
+      function()
+        obsidian_weekly_step(-1)
+      end,
+      desc = 'Obsidian: previous week note',
+    },
+    {
+      '<leader>o}',
+      function()
+        obsidian_weekly_step(1)
+      end,
+      desc = 'Obsidian: next week note',
+    },
     -- navigation within / around a note
     { '<leader>ob', '<cmd>Obsidian backlinks<cr>', desc = 'Obsidian: backlinks' },
     { '<leader>ol', '<cmd>Obsidian links<cr>', desc = 'Obsidian: links in note' },
@@ -178,6 +313,9 @@ return {
   ---@type obsidian.config
   opts = {
     legacy_commands = false, -- use modern `:Obsidian <subcommand>` syntax only
+    -- PJF: filename == title, so wiki links render as plain [[note name]] with no
+    -- unique-id + alias. See obsidian_title_id above.
+    note_id_func = obsidian_title_id,
     workspaces = {
       { name = 'pkm', path = vault_path },
     },
@@ -255,17 +393,18 @@ return {
     end
 
     -- PJF: override <CR> in vault buffers with our wrapper (adds the strip-marker
-    -- step; see obsidian_cr). The plugin re-maps <CR> on every BufEnter, so we
-    -- re-assert ours via vim.schedule (runs after the plugin's handler) on each
-    -- enter of a buffer the plugin has claimed (vim.b.obsidian_buffer).
-    vim.api.nvim_create_autocmd('BufEnter', {
-      pattern = '*.md',
+    -- step; see obsidian_cr). Hooked on the plugin's own User ObsidianNoteEnter
+    -- event, which fires AFTER it has claimed the buffer and installed its own
+    -- <CR> smart-action map — so our override always lands last and can't race
+    -- the attach. (The previous BufEnter + vim.schedule + b:obsidian_buffer
+    -- check ran before the plugin's async attach on first open, so freshly
+    -- opened notes silently got no wrapper maps — normal <CR> fell back to the
+    -- plugin's map and looked fine, but visual <CR> did nothing.)
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'ObsidianNoteEnter',
       callback = function(ev)
-        vim.schedule(function()
-          if vim.api.nvim_buf_is_valid(ev.buf) and vim.b[ev.buf].obsidian_buffer then
-            vim.keymap.set('n', '<CR>', obsidian_cr, { buffer = ev.buf, desc = 'Obsidian smart action (+ strip-marker cycle)' })
-          end
-        end)
+        vim.keymap.set('n', '<CR>', obsidian_cr, { buffer = ev.buf, desc = 'Obsidian smart action (+ strip-marker cycle)' })
+        vim.keymap.set('v', '<CR>', obsidian_cr_visual, { buffer = ev.buf, desc = 'Obsidian: cycle checkbox status (visual)' })
       end,
     })
   end,

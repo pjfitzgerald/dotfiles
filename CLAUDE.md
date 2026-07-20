@@ -24,7 +24,8 @@ The nvim config is based on [kickstart.nvim](https://github.com/nvim-lua/kicksta
 
 - `nvim/init.lua` — Main config file containing nearly all settings, keymaps, and plugin declarations. Custom additions are marked with `-- PJF:` comments.
 - `nvim/lua/kickstart/plugins/` — Optional plugin modules (neo-tree is enabled; debug, indent_line, lint, autopairs, gitsigns are available but commented out in init.lua)
-- `nvim/lua/custom/plugins/init.lua` — Empty, intended for user-added plugins (currently unused; the `{ import = 'custom.plugins' }` line is also commented out)
+- `nvim/lua/custom/plugins/obsidian.lua` — The **single source of truth** for the obsidian.nvim spec (vault workflow, `<leader>o` keymaps, `<CR>` checkbox-cycle wrappers, weekly notes). Loaded via an explicit `require 'custom.plugins.obsidian'` in init.lua's plugin list — do NOT add a second obsidian spec to init.lua; lazy.nvim merges same-plugin specs and the resulting config-override shadowing is exactly how the visual checkbox toggle silently broke once.
+- `nvim/lua/custom/plugins/init.lua` — Empty, intended for user-added plugins (the `{ import = 'custom.plugins' }` line is commented out; modules are required explicitly instead, as with obsidian.lua)
 - `nvim/lazy-lock.json` — Plugin lockfile (managed by lazy.nvim)
 
 ## Custom Modifications (PJF)
