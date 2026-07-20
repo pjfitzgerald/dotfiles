@@ -1,0 +1,28 @@
+#!/bin/sh
+# tmux-send-pane <target> <source-pane-id>
+# Join the source pane side-by-side into a target window (used by prefix + J).
+# Target forms:
+#   3 / name        window in the current session
+#   sess:3 / sess:name   window in another session
+#   sess            another session's current window
+target="$1"
+src="$2"
+
+[ -n "$target" ] && [ -n "$src" ] || exit 0
+
+try() {
+  err=$(tmux join-pane -h -s "$src" -t "$1" 2>&1)
+}
+
+case "$target" in
+  *:*)
+    try "$target" || { tmux display-message "send-pane: $err"; exit 1; }
+    ;;
+  *)
+    # Window in the current session first, then a session's current window
+    try ":$target" || first_err="$err"
+    if [ -n "$first_err" ]; then
+      try "$target:" || { tmux display-message "send-pane: $first_err"; exit 1; }
+    fi
+    ;;
+esac
