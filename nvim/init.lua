@@ -265,11 +265,18 @@ vim.keymap.set('n', '<leader>Y', '"+yg_')
 vim.keymap.set('n', '<leader>y', '"+y')
 vim.keymap.set('n', '<leader>yy', '"+yy')
 
--- PJF: Paste from system clipboard
+-- PJF: Paste from system clipboard.
+-- In visual mode `p` and `P` both replace the selection identically -- the only
+-- difference is that `p` captures the replaced text into the unnamed register
+-- (which IS '+' here, via clipboard=unnamedplus above), clobbering the clipboard,
+-- while `P` touches no register so the same text can be pasted over repeatedly
+-- (:h v_P). Hence both visual maps use "+P; bare `p` is left unmapped for when the
+-- default clobbering replace is wanted. These are redundant while unnamedplus is
+-- set (bare p/P already reach '+') -- kept as insurance if that ever changes.
 vim.keymap.set('n', '<leader>p', '"+p')
 vim.keymap.set('n', '<leader>P', '"+P')
-vim.keymap.set('v', '<leader>p', '"+p')
-vim.keymap.set('v', '<leader>P', '"+P')
+vim.keymap.set('v', '<leader>p', '"+P', { desc = 'Paste over selection (keep clipboard)' })
+vim.keymap.set('v', '<leader>P', '"+P', { desc = 'Paste over selection (keep clipboard)' })
 
 -- PJF: Show full file path
 vim.keymap.set('n', '<leader>fp', function()
