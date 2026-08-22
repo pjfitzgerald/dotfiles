@@ -18,6 +18,31 @@ This is a personal dotfiles repository (`~/dotfiles`), used across macOS (person
 - **Auth** is one-time and not committed: `opencode auth login` → OpenRouter.
 - **Not ported:** Claude Code harness features with no opencode equivalent (voice, push notifications, Anthropic-shipped commands like `/code-review`, `/loop`), and the `claude/memory/` recall system (no native opencode equivalent — skipped for now).
 
+## Terminals
+
+Primary terminals are **iTerm2** (macOS) and **ghostty**; kitty is installed but
+secondary. Most work happens over SSH from the Mac into the Linux boxes, which
+is where both of the gotchas below bite.
+
+- `ghostty/config` is symlinked by `install.sh` to
+  `~/Library/Application Support/com.mitchellh.ghostty/config` on macOS, or
+  `~/.config/ghostty/config` on Linux. **The file must be named exactly
+  `config`** -- Ghostty silently ignores `config.ghostty`, which is what an
+  editor opened via Cmd+, tends to save.
+- `macos-option-as-alt = true` is the load-bearing setting. Without it macOS
+  Option composes Unicode (`Option+s` -> `ß`), so every Alt-based tmux binding
+  in `tmux/tmux.conf` types text instead of firing. iTerm2's equivalent lives in
+  Profiles -> Keys -> "Left Option key: Esc+".
+- **terminfo does not travel over SSH.** ghostty and kitty ship custom entries
+  (`xterm-ghostty`, `xterm-kitty`); a remote host without them fails with
+  `missing or unsuitable terminal`. Ubuntu's `ncurses-term` has `ghostty` but
+  not the `xterm-ghostty` alias, and needs `kitty-terminfo` for kitty. Either
+  install those remotely, or use `kitten ssh` / ghostty's `ssh-terminfo`, which
+  push the entry across for you.
+- tmux 3.6 has no built-in feature table for ghostty or kitty (only iTerm2 and
+  foot), so `tmux/tmux.conf` declares `terminal-features` for both explicitly.
+  Those are read at *client attach* time -- `source-file` alone won't apply them.
+
 ## Neovim Config Structure
 
 The nvim config is based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) — a single-file starting point, not a distribution.

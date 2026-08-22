@@ -1,0 +1,18 @@
+# Ghostty configuration.
+#
+# The file MUST be named exactly `config` -- no extension. Editors opened via
+# Ghostty's Cmd+, like to append one, and a stray `config.ghostty` is easy to
+# stare at while wondering why nothing applies.
+#
+# Locations (see install.sh, which symlinks this file):
+#   macOS  ~/Library/Application Support/com.mitchellh.ghostty/config
+#   Linux  ~/.config/ghostty/config
+
+# Make the macOS Option key send Alt/Esc+ rather than composing Unicode.
+# Without this, Option+s types "ß", Option+w types "∑", and so on -- so every
+# Alt-based tmux binding (M-s / M-w session pickers, M-1..M-9 window jumps,
+# M-S-<n> pane jumps, the M-arrow chords) silently turns into text instead of
+# firing. There is no built-in default for this: `ghostty +show-config
+# --default` reports the key as empty, so it has to be set explicitly.
+# Use `left` instead of `true` to keep right-Option composing accents.
+macos-option-as-alt = true

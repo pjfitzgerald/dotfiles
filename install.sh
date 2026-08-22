@@ -204,6 +204,25 @@ if [ -d "$HOME/.config/tmux" ] && [ ! -L "$HOME/.config/tmux" ]; then
 fi
 ln -sfn "$DOTFILES/tmux" "$HOME/.config/tmux"
 
+# Ghostty terminal config.
+# Ghostty reads a file named exactly `config` -- an extension makes it invisible
+# to Ghostty, which is a genuinely confusing failure mode, so warn about the
+# common `config.ghostty` mistake rather than silently leaving it in place.
+if [[ "$(uname)" == "Darwin" ]]; then
+  GHOSTTY_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
+else
+  GHOSTTY_DIR="$HOME/.config/ghostty"
+fi
+mkdir -p "$GHOSTTY_DIR"
+if [ -e "$GHOSTTY_DIR/config" ] && [ ! -L "$GHOSTTY_DIR/config" ]; then
+  echo "Backing up existing ghostty config to config.bak"
+  mv "$GHOSTTY_DIR/config" "$GHOSTTY_DIR/config.bak.$(date +%s)"
+fi
+ln -sf "$DOTFILES/ghostty/config" "$GHOSTTY_DIR/config"
+if [ -e "$GHOSTTY_DIR/config.ghostty" ]; then
+  echo "Note: $GHOSTTY_DIR/config.ghostty exists and is ignored by Ghostty; delete it."
+fi
+
 # Claude Code config
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"

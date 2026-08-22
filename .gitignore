@@ -33,6 +33,10 @@ tmux/plugins/
 !opencode/
 !opencode/**
 
+# Ghostty terminal config
+!ghostty/
+!ghostty/**
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/
