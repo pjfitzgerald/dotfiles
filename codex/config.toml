@@ -1,0 +1,16 @@
+# Codex CLI adapter. Symlinked to ~/.codex/config.toml by install.sh.
+#
+# Instructions are NOT configured here -- install.sh symlinks
+# ~/.codex/AGENTS.md -> ~/dotfiles/ai/AGENTS.md, which is where Codex reads
+# user-level instructions from. Skills/commands: Codex has no skills system;
+# ~/.codex/prompts/*.md are its slash commands, symlinked from ai/commands/.
+#
+# STUB: codex is not installed on this machine yet. Fill in model/approval
+# settings on first use; MCP servers come from `ai/bin/sync-mcp.sh` output.
+
+# model = "gpt-5-codex"
+# approval_policy = "on-request"
+
+# [mcp_servers.railway]
+# command = "railway"
+# args = ["mcp"]

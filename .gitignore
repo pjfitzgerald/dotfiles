@@ -25,16 +25,20 @@
 # Ignore tmux plugin installs (managed by TPM)
 tmux/plugins/
 
-# Claude Code config
+# Agent config: neutral sources plus per-agent adapters
+!ai/
+!ai/**
 !claude/
 !claude/**
-
-# terminal-browser skill is a symlink into ~/.local/share (machine-local install)
-claude/skills/terminal-browser
-
-# opencode config
 !opencode/
 !opencode/**
+!codex/
+!codex/**
+!gemini/
+!gemini/**
+
+# terminal-browser skill is a symlink into ~/.local/share (machine-local install)
+ai/skills/terminal-browser
 
 # Ghostty terminal config
 !ghostty/

@@ -237,27 +237,71 @@ if [[ "$(uname)" == "Darwin" ]] && [ -e "$HOME/Library/Preferences/kitty/kitty.c
   echo "Note: ~/Library/Preferences/kitty/kitty.conf exists and shadows $KITTY_DIR/kitty.conf; delete it."
 fi
 
-# Claude Code config
+# ---------------------------------------------------------------------------
+# Coding agents.
+#
+# Everything portable lives in ai/ and is symlinked into each agent's expected
+# path; only harness-specific settings live in the per-agent adapter dirs.
+# See ai/README.md for the full mapping.
+#
+#   ai/AGENTS.md   instructions   (Claude Code only reads CLAUDE.md, hence the
+#                                  symlink under that name)
+#   ai/skills/     SKILL.md skills
+#   ai/commands/   slash-command prompt bodies
+#   ai/agents/     subagent definitions
+#   ai/memory/     memory notes
+#   ai/context/    stdin -> stdout context injectors (hook logic)
+#   ai/mcp.json    MCP servers, applied by ai/bin/sync-mcp.sh
+# ---------------------------------------------------------------------------
+AI="$DOTFILES/ai"
+
+# Home-level AGENTS.md, for agents that walk up from the project dir.
+ln -sf "$AI/AGENTS.md" "$HOME/AGENTS.md"
+
+# --- Claude Code -----------------------------------------------------------
 mkdir -p "$HOME/.claude"
-ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
+ln -sf  "$AI/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+ln -sfn "$AI/skills"    "$HOME/.claude/skills"
+ln -sfn "$AI/commands"  "$HOME/.claude/commands"
+ln -sfn "$AI/agents"    "$HOME/.claude/agents"
+ln -sfn "$AI/context"   "$HOME/.claude/hooks"
+ln -sf  "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
 if [[ "$(uname)" == "Darwin" ]]; then
   CLAUDE_PROJECT_DIR="$HOME/.claude/projects/-Users-$(whoami)"
 else
   CLAUDE_PROJECT_DIR="$HOME/.claude/projects/-home-$(whoami)"
 fi
 mkdir -p "$CLAUDE_PROJECT_DIR"
-ln -sfn "$DOTFILES/claude/memory" "$CLAUDE_PROJECT_DIR/memory"
-ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
-ln -sfn "$DOTFILES/claude/hooks" "$HOME/.claude/hooks"
+ln -sfn "$AI/memory" "$CLAUDE_PROJECT_DIR/memory"
 
-# opencode config (coexists with Claude Code).
-# Reuses ~/.claude/CLAUDE.md (rules) and ~/.claude/skills/*/SKILL.md (skills) via
-# opencode's built-in fallback, so only the opencode-specific config lives here.
-# One-time, not symlinked: run `opencode auth login` and pick OpenRouter.
+# --- opencode --------------------------------------------------------------
+# opencode loads its own AGENTS.md *and* ~/.claude/CLAUDE.md; both now resolve
+# to ai/AGENTS.md, so opencode.json sets disableClaudeCodePrompt to avoid
+# loading the same rules twice.
 mkdir -p "$HOME/.config/opencode"
-ln -sf "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
-ln -sf "$DOTFILES/opencode/tui.json" "$HOME/.config/opencode/tui.json"
+ln -sf  "$AI/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+ln -sfn "$AI/skills"    "$HOME/.config/opencode/skill"
+ln -sfn "$AI/commands"  "$HOME/.config/opencode/command"
+ln -sfn "$AI/agents"    "$HOME/.config/opencode/agent"
+ln -sf  "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+ln -sf  "$DOTFILES/opencode/tui.json"      "$HOME/.config/opencode/tui.json"
+
+# --- Codex (stub; not installed here yet) ----------------------------------
+mkdir -p "$HOME/.codex"
+ln -sf  "$AI/AGENTS.md" "$HOME/.codex/AGENTS.md"
+ln -sfn "$AI/commands"  "$HOME/.codex/prompts"
+ln -sf  "$DOTFILES/codex/config.toml" "$HOME/.codex/config.toml"
+
+# --- Gemini CLI (stub; not installed here yet) -----------------------------
+# Link both names: contextFileName in settings.json should make AGENTS.md work,
+# but GEMINI.md is the built-in default, so this works either way.
+mkdir -p "$HOME/.gemini"
+ln -sf "$AI/AGENTS.md" "$HOME/.gemini/AGENTS.md"
+ln -sf "$AI/AGENTS.md" "$HOME/.gemini/GEMINI.md"
+ln -sf "$DOTFILES/gemini/settings.json" "$HOME/.gemini/settings.json"
+
+# --- MCP servers -----------------------------------------------------------
+bash "$AI/bin/sync-mcp.sh" || echo "Warning: MCP sync failed; run ai/bin/sync-mcp.sh manually."
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."

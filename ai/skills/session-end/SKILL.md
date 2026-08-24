@@ -9,7 +9,7 @@ Updates the Obsidian hub note so a cold future session can resume without contex
 
 ## Steps
 
-1. **Locate the hub note.** Read the project's `CLAUDE.md` and find the "Long-term documentation hub" section — it names the exact path, e.g. `~/pkm/01 projects/01 active/<project>/<project>.md`. If the project has no such section, tell the user the pattern isn't set up yet and suggest running the bootstrap prompt from `~/pkm/claude project hub note.md`. Do not proceed.
+1. **Locate the hub note.** Read the project's `AGENTS.md` (or `CLAUDE.md`) and find the "Long-term documentation hub" section — it names the exact path, e.g. `~/pkm/01 projects/01 active/<project>/<project>.md`. If the project has no such section, tell the user the pattern isn't set up yet and suggest running the bootstrap prompt from `~/pkm/claude project hub note.md`. Do not proceed.
 
 2. **Read the hub note** so you know current Resume here / Tasks / Progress log / Decisions state.
 

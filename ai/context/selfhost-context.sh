@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# UserPromptSubmit hook: when a prompt is about PJF's self-hosted homelab,
-# surface the authoritative memory notes so Claude reads them before answering.
-# Stdout from a UserPromptSubmit hook is injected into the model's context.
+# Context injector: reads the user's prompt on stdin, and if it looks like a
+# question about PJF's self-hosted homelab, writes pointers to the authoritative
+# memory notes on stdout. Agent-neutral by design -- stdin in, context out, no
+# harness API -- so each agent only needs its own thin wiring:
 #
-# Wired up in claude/settings.json -> hooks.UserPromptSubmit.
+#   Claude Code: claude/settings.json -> hooks.UserPromptSubmit (stdout is
+#                injected into the model's context).
+#   opencode:    a plugin would call this; not wired yet.
+#   Codex:       no equivalent hook event; not wired.
+#
 # Symlinked to ~/.claude/hooks/ by install.sh.
 
 input=$(cat)
@@ -16,9 +21,9 @@ if printf '%s' "$input" | grep -qiE "$pattern"; then
 <self-hosting-context>
 This prompt looks like it's about PJF's self-hosted homelab. Before answering,
 read the authoritative notes (do not answer from memory of this blurb alone):
-  ~/dotfiles/claude/memory/project_homelab.md    (inventory + architecture pattern)
-  ~/dotfiles/claude/memory/project_paperless.md
-  ~/dotfiles/claude/memory/project_nextcloud.md
+  ~/dotfiles/ai/memory/project_homelab.md    (inventory + architecture pattern)
+  ~/dotfiles/ai/memory/project_paperless.md
+  ~/dotfiles/ai/memory/project_nextcloud.md
   ~/pkm/zettelkasten/*setup*.md and the [[selfhosted]] / [[t480]] / [[dsfitz]] notes (full write-ups)
 
 Verify live state, don't assume it matches the notes:

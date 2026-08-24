@@ -1,15 +1,21 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  // Global opencode config. Coexists with Claude Code.
+  // opencode adapter. Only opencode-specific settings live here; everything
+  // portable comes from ~/dotfiles/ai/ (see ai/README.md).
   //
-  // Rules:  opencode falls back to ~/.claude/CLAUDE.md (no AGENTS.md here on purpose,
-  //         so that file stays the single source of truth shared with Claude Code).
-  // Skills: opencode reads ~/.claude/skills/*/SKILL.md natively (symlinked from the repo
-  //         by install.sh) — all 7 custom skills load unchanged. Nothing to configure.
-  // Memory: claude/memory/ has no native opencode recall — intentionally skipped for now.
+  // Rules:  ~/.config/opencode/AGENTS.md -> ai/AGENTS.md (symlinked by install.sh).
+  //         disableClaudeCodePrompt is REQUIRED: opencode loads both its own
+  //         AGENTS.md *and* ~/.claude/CLAUDE.md, and since both now resolve to
+  //         ai/AGENTS.md the rules would otherwise land in context twice.
+  // Skills: ~/.config/opencode/skill -> ai/skills (opencode also auto-discovers
+  //         ~/.claude/skills, but the explicit link keeps it Claude-independent).
+  // Memory: ai/memory/ has no native opencode recall — read via the skills dir.
+  // MCP:    mirror of ai/mcp.json; regenerate with ai/bin/sync-mcp.sh.
   //
   // Auth (one-time, not committed): `opencode auth login` -> OpenRouter -> paste API key.
+
+  "disableClaudeCodePrompt": true,
 
   // Confirm exact OpenRouter slugs with `opencode models` after auth, then adjust.
   // Primary model matches the Hermes agent's (`hermes config show`) as of 2026-08-23.

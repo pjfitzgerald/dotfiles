@@ -1,0 +1,13 @@
+{
+  "$comment": [
+    "Neutral MCP server declarations -- the single source of truth.",
+    "No agent reads this file directly; ai/bin/sync-mcp.sh applies it to each one.",
+    "Shape matches Claude Code / the common mcpServers convention."
+  ],
+  "mcpServers": {
+    "railway": {
+      "command": "railway",
+      "args": ["mcp"]
+    }
+  }
+}
