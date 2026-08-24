@@ -1,29 +1,37 @@
 ---
 name: jellyfin-dsfitz
-description: "PJF's Jellyfin server on dsfitz — now the primary media player (Plex kept as backup). Admin login, libraries, ports, how it's deployed."
-metadata: 
+description: "PJF's Jellyfin server — runs on t480 (NOT dsfitz; that instance was decommissioned 2026-06-21). Media read over NFS; NAS dir-permission gotcha that hides libraries."
+metadata:
   node_type: memory
   type: project
   originSessionId: 47376f41-52fe-4bdc-b743-517d9f94b53b
+  modified: 2026-08-01T22:03:18.084Z
 ---
 
-Jellyfin (v10.11.8) is PJF's **primary** media player as of 2026-06-18, replacing Plex as primary. Plex is kept running as backup. Both run as Docker containers on the **dsfitz** Synology DS1821+ (`ssh dsfitz`, Tailscale), managed by Container Manager via `/volume2/docker/docker-compose.yml` (linuxserver images). The same compose has the *arr stack: sonarr/radarr/prowlarr/qbittorrent.
+Jellyfin is PJF's **primary** media player (Plex kept as backup, still on dsfitz:32400).
 
-- **Jellyfin URL (LAN):** `http://dsfitz.local:8096` (or `http://127.0.0.1:8096` on the NAS). Remote = Tailscale address :8096.
-- **Plex:** still up on port 32400 (host networking).
-- **Admin user:** `pjf` / password `lLAdVeRFJGiiJMpWGlPChW` (generated 2026-06-18 — change in UI when convenient).
-- **Config dir:** `/volume2/docker/jellyfin` → `/config`. DB at `data/data/jellyfin.db`.
-- **Media:** `/volume2/data/media` mounted read-only at `/media`.
-- **Docker control needs sudo password** (not available over SSH) — but the container was already running, so the whole setup was done via the Jellyfin **HTTP API** over SSH (startup wizard + `/Library/VirtualFolders`), no docker access needed.
+**It runs on the t480, not dsfitz.** The dsfitz Jellyfin was decommissioned 2026-06-21 — don't
+go looking for it there. Compose lives at **`~/jellyfin/docker-compose.yml`** (note: `~/jellyfin`,
+*not* the usual `~/docker/<service>/` pattern). Host networking, `user: "1000:1000"`, `/dev/dri`
+passed through for QuickSync HW transcode. Media is dsfitz's `/volume2/data/media`, mounted
+read-only on the t480 at `/mnt/dsfitz-data/media` → `/media:ro` in the container.
 
-Libraries (folder → type):
-- Movies ← movies (movies)
-- Shows ← tv + daily-wire (tvshows)
-- Music ← music (music)
-- Comedy ← comedy (movies)
-- Documentaries ← documentaries (movies)
-- Sport ← sport (homevideos)
-- YouTube ← youtube (homevideos)
-- Misc ← misc (homevideos)
+- **LAN:** `http://192.168.8.228:8096` · **Remote:** `http://t480.astrapia-degree.ts.net:8096`
+- **Config:** `~/jellyfin/config`; DB at `config/data/jellyfin.db`; logs `config/log/`.
+- **Admin user `pjf`** — password was regenerated during the t480 build and is NOT the old
+  dsfitz one; no API keys exist in the DB, so API access needs PJF to supply it.
+- Libraries: Movies←movies · Shows←tv+daily-wire · Music←music · Comedy←comedy ·
+  Documentaries←documentaries · Sport←sport · YouTube←youtube · Misc←misc
 
-Outstanding (client-side, on PJF): install Jellyfin apps on devices (Apple TV/phone/web) and point at the server. See [[immich-go-dsfitz]] for the same NAS/SSH setup.
+**Gotcha — silently missing library items = NAS directory permissions.** Jellyfin runs as
+uid 1000; media dirs on dsfitz created as `patrick_admin` (uid 1026) mode `0700` are unreadable,
+so the scan skips them *and still reports "Completed"* — no error anywhere. Found 2026-07-31
+with 433/470 movie folders hidden this way. Detect + fix on dsfitz:
+`find /volume2/data/media -type d \( -perm -u+rwx -a ! -perm -g+rx \) -user patrick_admin -exec chmod 755 {} +`
+
+**Debugging without credentials:** read `config/data/jellyfin.db` via Python's `sqlite3` with a
+`?mode=ro` URI (no `sqlite3` CLI on the t480) — table `BaseItems`, `Type='MediaBrowser.Controller.Entities.Movies.Movie'`,
+diff `Path` against the filesystem to find what didn't index.
+
+Full write-up: `~/pkm/zettelkasten/jellyfin on t480 quicksync.md`. See [[project-homelab]],
+[[t480-server]], [[reference_dsfitz]].

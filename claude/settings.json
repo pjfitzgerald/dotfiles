@@ -1,8 +1,5 @@
 {
-  "model": "claude-fable-5[1m]",
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true
-  },
+  "model": "opus",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -15,12 +12,17 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
+  "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
+  "verbose": false,
   "agentPushNotifEnabled": true,
   "voiceEnabled": true
 }

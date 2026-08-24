@@ -27,8 +27,9 @@ This file applies to all projects and provides global guidance to Claude Code.
 
 ## Obsidian vault (`~/pkm`)
 
-- PJF's Obsidian vault lives at `~/pkm`. Existing top-level folders: `01 projects` (with `01 active` / `02 inactive` / `03 ideas` / `04 archived`), `02 zettelkasten`, `03 reference`, `04 daily-notes`, `05 archive`, `07 leetcode`.
-- **Default location for new notes**: the vault root (`~/pkm/`), unless the note belongs to a specific project — in which case place it inside that project's folder at `~/pkm/01 projects/01 active/<project>/`.
+- PJF's Obsidian vault lives at `~/pkm`. Existing top-level folders: `projects` (with `01 active` / `02 inactive` / `03 ideas` / `04 archived`), `zettelkasten`, `daily notes`, `weekly notes`. Note the top-level folders are *not* number-prefixed — only the sub-folders inside `projects` are.
+- **Default location for new notes**: the vault root (`~/pkm/`), unless the note belongs to a specific project — in which case place it inside that project's folder at `~/pkm/projects/01 active/<project>/`.
+- **Never commit the vault.** Don't run `git add`/`git commit` in `~/pkm` unless PJF explicitly asks. Write and edit notes freely; leave staging and committing to him.
 - Each active project has its own folder containing a hub note (`<project>.md`) plus any sub-notes. Within a project folder, prefix sub-notes with the project name (`<project> - <topic>.md`) to avoid wikilink collisions across the vault.
 - Wikilinks in Obsidian resolve by filename, not path — so links like `[[pbudget]]` keep working regardless of folder location.
 

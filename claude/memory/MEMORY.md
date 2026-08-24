@@ -6,6 +6,7 @@
 
 ## Feedback
 - [feedback_no_coauthor.md](feedback_no_coauthor.md) — Never add Co-Authored-By lines to commit messages
+- [feedback_no_credential_copying.md](feedback_no_credential_copying.md) — Never copy an API key from one tool's store into another without asking first
 
 ## Projects
 - [project_pkm_sync.md](project_pkm_sync.md) — PKM syncs via Syncthing (folder ID ztety-fltwy) + git; .git excluded from Syncthing
@@ -19,7 +20,7 @@
 - [project_calibre.md](project_calibre.md) — Calibre-Web-Automated on dsfitz: swap-thrash failure modes + s6-rc recovery without full container restart
 - [t480-server.md](t480-server.md) — t480 home server: Ubuntu 25.10, LUKS root, Comet Pro KVM, kdump boot-hang fix + debug recipe, SSH/sudo details
 - [karakeep-t480.md](karakeep-t480.md) — bookmark stack moved off dsfitz to t480; compose dir, Tailscale node, management, rollback
-- [jellyfin-dsfitz.md](jellyfin-dsfitz.md) — Jellyfin on dsfitz, now primary media player (Plex kept as backup): admin login, libraries, ports, compose
+- [jellyfin-dsfitz.md](jellyfin-dsfitz.md) — Jellyfin runs on **t480** (`~/jellyfin`), not dsfitz; libraries, and the NAS `0700` dir-permission gotcha that silently hides media
 - [immich-go-dsfitz.md](immich-go-dsfitz.md) — upload NAS folders to Immich via immich-go on dsfitz: binary path, server/key, folder-as-album, SSH gotchas
 
 ## References

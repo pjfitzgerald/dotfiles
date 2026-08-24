@@ -29,6 +29,9 @@ tmux/plugins/
 !claude/
 !claude/**
 
+# terminal-browser skill is a symlink into ~/.local/share (machine-local install)
+claude/skills/terminal-browser
+
 # opencode config
 !opencode/
 !opencode/**
