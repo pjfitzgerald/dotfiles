@@ -223,6 +223,20 @@ if [ -e "$GHOSTTY_DIR/config.ghostty" ]; then
   echo "Note: $GHOSTTY_DIR/config.ghostty exists and is ignored by Ghostty; delete it."
 fi
 
+# Kitty terminal config. Same path on macOS and Linux. On macOS kitty also
+# reads ~/Library/Preferences/kitty/kitty.conf, so warn if a real file is
+# sitting there -- it would silently take precedence over this symlink.
+KITTY_DIR="$HOME/.config/kitty"
+mkdir -p "$KITTY_DIR"
+if [ -e "$KITTY_DIR/kitty.conf" ] && [ ! -L "$KITTY_DIR/kitty.conf" ]; then
+  echo "Backing up existing kitty config to kitty.conf.bak"
+  mv "$KITTY_DIR/kitty.conf" "$KITTY_DIR/kitty.conf.bak.$(date +%s)"
+fi
+ln -sf "$DOTFILES/kitty/kitty.conf" "$KITTY_DIR/kitty.conf"
+if [[ "$(uname)" == "Darwin" ]] && [ -e "$HOME/Library/Preferences/kitty/kitty.conf" ]; then
+  echo "Note: ~/Library/Preferences/kitty/kitty.conf exists and shadows $KITTY_DIR/kitty.conf; delete it."
+fi
+
 # Claude Code config
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"

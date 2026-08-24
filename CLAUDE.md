@@ -29,10 +29,18 @@ is where both of the gotchas below bite.
   `~/.config/ghostty/config` on Linux. **The file must be named exactly
   `config`** -- Ghostty silently ignores `config.ghostty`, which is what an
   editor opened via Cmd+, tends to save.
-- `macos-option-as-alt = true` is the load-bearing setting. Without it macOS
-  Option composes Unicode (`Option+s` -> `ß`), so every Alt-based tmux binding
-  in `tmux/tmux.conf` types text instead of firing. iTerm2's equivalent lives in
-  Profiles -> Keys -> "Left Option key: Esc+".
+- `kitty/kitty.conf` is symlinked by `install.sh` to `~/.config/kitty/kitty.conf`
+  on both platforms. On macOS kitty *also* reads
+  `~/Library/Preferences/kitty/kitty.conf`, which shadows the symlink if it
+  exists -- `install.sh` warns about it.
+- **Option-as-Alt is the load-bearing setting, and every terminal spells it
+  differently.** Without it macOS Option composes Unicode (`Option+s` -> `ß`),
+  so every Alt-based tmux binding in `tmux/tmux.conf` (the `M-s`/`M-w` pickers,
+  `M-1`..`M-9` window jumps, `M-S-<n>` pane jumps, the `M-arrow` chords) types
+  text instead of firing. ghostty: `macos-option-as-alt = true`. kitty:
+  `macos_option_as_alt yes` (kitty's default is `no`). iTerm2: Profiles -> Keys
+  -> "Left Option key: Esc+". Use the `left`-only variant if right-Option should
+  keep composing accents.
 - **terminfo does not travel over SSH.** ghostty and kitty ship custom entries
   (`xterm-ghostty`, `xterm-kitty`); a remote host without them fails with
   `missing or unsuitable terminal`. Ubuntu's `ncurses-term` has `ghostty` but
