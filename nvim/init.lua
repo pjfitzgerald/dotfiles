@@ -202,8 +202,22 @@ vim.o.confirm = true
 -- JS/JSON included because conform's format_on_save has no JS formatter, so it
 -- falls back to LSP (ts_ls) formatting, which retabs the file using expandtab.
 -- Without this, saving board .js files converts all leading spaces to tabs.
+-- The React filetypes are separate from their plain counterparts -- a .tsx file
+-- is 'typescriptreact', not 'typescript' -- so they have to be listed by name or
+-- they keep the defaults (shiftwidth=8, noexpandtab) and the LSP retabs them.
+-- A project with an .editorconfig sets these itself; this is the fallback for
+-- the ones that don't have one.
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'html', 'xhtml', 'javascript', 'json', 'typescript' },
+  pattern = {
+    'html',
+    'xhtml',
+    'javascript',
+    'javascriptreact',
+    'json',
+    'jsonc',
+    'typescript',
+    'typescriptreact',
+  },
   callback = function()
     vim.bo.tabstop = 2 --how many columns a \t character displays as (visual width of existing tabs)
     vim.bo.shiftwidth = 2 --how many columns to indent with >>, <<, and auto-indent
