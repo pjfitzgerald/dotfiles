@@ -12,7 +12,8 @@
   // Auth (one-time, not committed): `opencode auth login` -> OpenRouter -> paste API key.
 
   // Confirm exact OpenRouter slugs with `opencode models` after auth, then adjust.
-  "model": "openrouter/anthropic/claude-opus-4.8",
+  // Primary model matches the Hermes agent's (`hermes config show`) as of 2026-08-23.
+  "model": "openrouter/z-ai/glm-5.2",
   "small_model": "openrouter/anthropic/claude-haiku-4.5",
 
   // Roughly mirror day-to-day Claude Code behaviour. Tune to taste.
@@ -20,5 +21,13 @@
     "edit": "allow",
     "bash": "ask",
     "webfetch": "allow"
+  },
+
+  "mcp": {
+    "railway": {
+      "type": "local",
+      "command": ["railway", "mcp"],
+      "enabled": true
+    }
   }
 }
