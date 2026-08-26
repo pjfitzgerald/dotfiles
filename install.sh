@@ -275,11 +275,14 @@ mkdir -p "$CLAUDE_PROJECT_DIR"
 ln -sfn "$AI/memory" "$CLAUDE_PROJECT_DIR/memory"
 
 # --- opencode --------------------------------------------------------------
-# opencode loads its own AGENTS.md *and* ~/.claude/CLAUDE.md; both now resolve
-# to ai/AGENTS.md, so opencode.json sets disableClaudeCodePrompt to avoid
-# loading the same rules twice.
+# No ~/.config/opencode/AGENTS.md symlink on purpose: opencode reads BOTH that
+# path and ~/.claude/CLAUDE.md, so linking both would load the same rules twice.
+# The only off switch is $OPENCODE_DISABLE_CLAUDE_CODE_PROMPT, which is
+# all-or-nothing -- it also drops CLAUDE.md from opencode's project-level
+# walk-up, blinding it in every repo that has only a CLAUDE.md. So global rules
+# reach opencode through the ~/.claude/CLAUDE.md fallback instead.
 mkdir -p "$HOME/.config/opencode"
-ln -sf  "$AI/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+rm -f "$HOME/.config/opencode/AGENTS.md"
 ln -sfn "$AI/skills"    "$HOME/.config/opencode/skill"
 ln -sfn "$AI/commands"  "$HOME/.config/opencode/command"
 ln -sfn "$AI/agents"    "$HOME/.config/opencode/agent"

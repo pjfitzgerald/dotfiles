@@ -26,9 +26,11 @@ Two traps worth repeating from `ai/README.md`:
   discovery. So `AGENTS.md` is always the real file and `CLAUDE.md` is a
   symlink to it. That applies to this repo too: the file you are reading is
   `AGENTS.md`, and `CLAUDE.md` is a committed symlink (git mode 120000).
-- **opencode reads both** its own `AGENTS.md` and `~/.claude/CLAUDE.md`. Both
-  now resolve to `ai/AGENTS.md`, so `opencode/opencode.json` sets
-  `"disableClaudeCodePrompt": true` to stop the rules loading twice.
+- **opencode reads two instruction paths**, its own `AGENTS.md` and
+  `~/.claude/CLAUDE.md`, so `install.sh` links only the latter — linking both
+  would load the same rules twice. There is no config key to turn one off; the
+  env var that does it is all-or-nothing and would also stop opencode reading
+  project-level `CLAUDE.md`. See `ai/README.md`.
 
 Auth is one-time and never committed: `claude login`, `opencode auth login`
 (OpenRouter).

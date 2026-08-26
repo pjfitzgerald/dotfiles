@@ -4,18 +4,19 @@
   // opencode adapter. Only opencode-specific settings live here; everything
   // portable comes from ~/dotfiles/ai/ (see ai/README.md).
   //
-  // Rules:  ~/.config/opencode/AGENTS.md -> ai/AGENTS.md (symlinked by install.sh).
-  //         disableClaudeCodePrompt is REQUIRED: opencode loads both its own
-  //         AGENTS.md *and* ~/.claude/CLAUDE.md, and since both now resolve to
-  //         ai/AGENTS.md the rules would otherwise land in context twice.
+  // Rules:  via opencode's ~/.claude/CLAUDE.md fallback, which install.sh
+  //         symlinks to ai/AGENTS.md. Deliberately NOT also symlinked to
+  //         ~/.config/opencode/AGENTS.md -- opencode reads both paths, so that
+  //         would load the same rules twice. The only off switch is the env var
+  //         OPENCODE_DISABLE_CLAUDE_CODE_PROMPT, and it is all-or-nothing: it
+  //         also drops CLAUDE.md from opencode's PROJECT-level walk-up, which
+  //         would blind it in every repo that has only a CLAUDE.md.
   // Skills: ~/.config/opencode/skill -> ai/skills (opencode also auto-discovers
   //         ~/.claude/skills, but the explicit link keeps it Claude-independent).
   // Memory: ai/memory/ has no native opencode recall — read via the skills dir.
   // MCP:    mirror of ai/mcp.json; regenerate with ai/bin/sync-mcp.sh.
   //
   // Auth (one-time, not committed): `opencode auth login` -> OpenRouter -> paste API key.
-
-  "disableClaudeCodePrompt": true,
 
   // Confirm exact OpenRouter slugs with `opencode models` after auth, then adjust.
   // Primary model matches the Hermes agent's (`hermes config show`) as of 2026-08-23.

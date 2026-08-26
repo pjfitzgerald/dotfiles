@@ -22,7 +22,7 @@ expects, and per-agent adapter dirs (`claude/`, `opencode/`, `codex/`,
 
 | | Claude Code | opencode | Codex | Gemini CLI |
 | --- | --- | --- | --- | --- |
-| Instructions | `~/.claude/CLAUDE.md` | `~/.config/opencode/AGENTS.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` |
+| Instructions | `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.md` (fallback) | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` |
 | Skills | `~/.claude/skills` | `~/.config/opencode/skill` | — | — |
 | Commands | `~/.claude/commands` | `~/.config/opencode/command` | `~/.codex/prompts` | — |
 | Subagents | `~/.claude/agents` | `~/.config/opencode/agent` | — | — |
@@ -37,10 +37,20 @@ expects, and per-agent adapter dirs (`claude/`, `opencode/`, `codex/`,
   So `AGENTS.md` is the real file and `~/.claude/CLAUDE.md` is a symlink to it.
   Same at project level: a repo's `AGENTS.md` is real, its `CLAUDE.md` is a
   committed symlink.
-- **opencode would load the rules twice.** It reads
-  `~/.config/opencode/AGENTS.md` *and* `~/.claude/CLAUDE.md`; both now resolve
-  to `ai/AGENTS.md`. `opencode.json` sets `"disableClaudeCodePrompt": true` to
-  suppress the second read. Don't remove it.
+- **opencode reads two instruction paths, so only link one.** It loads
+  `~/.config/opencode/AGENTS.md` *and* `~/.claude/CLAUDE.md`. Linking both to
+  `ai/AGENTS.md` puts the same rules in context twice, so `install.sh`
+  deliberately creates only the `~/.claude/CLAUDE.md` one and lets opencode's
+  fallback find it. Don't "fix" this by adding the opencode-side symlink.
+  `"disableClaudeCodePrompt"` is **not a config key** — opencode silently drops
+  unknown top-level keys, so setting it in `opencode.json` does nothing. The
+  real switch is the env var `OPENCODE_DISABLE_CLAUDE_CODE_PROMPT` (or the
+  broader `OPENCODE_DISABLE_CLAUDE_CODE`), and it is all-or-nothing: it also
+  removes `CLAUDE.md` from opencode's *project-level* walk-up list, which would
+  blind it in every repo that has a `CLAUDE.md` and no `AGENTS.md`. Not worth it.
+- **Skills do not have this problem.** opencode dedupes skills by name, so the
+  `~/.config/opencode/skill` link and its `~/.claude/skills` scan resolving to
+  the same directory is harmless — verified with `opencode debug skill`.
 - **Gemini's `contextFileName` is unverified** — gemini-cli isn't installed on
   any of these machines yet. `install.sh` links both `~/.gemini/AGENTS.md` and
   `~/.gemini/GEMINI.md` so it works regardless. Confirm with `/memory show` on
