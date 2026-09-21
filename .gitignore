@@ -19,7 +19,8 @@
 !bin/**
 
 # Shell config
-!zshrc
+!zsh/
+!zsh/**
 !install.sh
 
 # Ignore tmux plugin installs (managed by TPM)

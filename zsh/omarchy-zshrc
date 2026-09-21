@@ -1,0 +1,100 @@
+# Omarchy-specific zshrc -- layers on top of the official `omarchy-zsh`
+# package instead of replacing it. Used only on Omarchy/Linux machines; see
+# zsh/zshrc for the cross-platform (macOS/WSL) standalone config this
+# supersedes there. install.sh picks between the two based on whether
+# /usr/share/omarchy-zsh is present.
+#
+# Rationale: omarchy-zsh (omacom-io/omarchy-zsh) is Omarchy's own zsh port of
+# the bash layer it ships by default (eza/zoxide/mise/fzf wiring, starship,
+# the tdl/tds/tdlm/tsl tmux layouts, c/cx/cy launchers, etc.) -- sourcing it
+# here keeps all of that instead of losing it the way a wholesale switch to
+# zsh/zshrc would. Only the pieces genuinely missing from it (personal git
+# aliases, zsh-vi-mode) are added below.
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# Load zsh options, keybindings, and completion
+[[ -f /usr/share/omarchy-zsh/shell/zoptions ]] && source /usr/share/omarchy-zsh/shell/zoptions
+
+# Load shared shell configuration (aliases, functions, environment, tool init)
+[[ -f /usr/share/omarchy-zsh/shell/all ]] && source /usr/share/omarchy-zsh/shell/all
+
+# Free up ga/gd for my own git aliases below: omarchy-zsh's worktree helpers
+# (shell/fns/worktrees, package-owned -- don't edit it directly, it'll get
+# clobbered on the next omarchy-zsh update) define functions ga/gd (add/remove
+# a worktree). Rename those to gad/gdf right after they load instead.
+if (( $+functions[ga] )); then
+  functions[gad]=$functions[ga]
+  unfunction ga
+fi
+if (( $+functions[gd] )); then
+  functions[gdf]=$functions[gd]
+  unfunction gd
+fi
+
+# Add your own customizations below
+#
+# Make an alias for invoking commands you use constantly
+# alias p='python'
+# alias cx="claude --permission-mode=plan --allow-dangerously-skip-permissions"
+
+# ---------------------------------------------------------------------------
+# zsh-vi-mode (jeffreytse/zsh-vi-mode)
+#
+# ZVM_INIT_MODE=sourcing: initialise at source time, not at the first prompt.
+# omarchy-zsh already sourced zsh-syntax-highlighting (shell/zoptions) and the
+# fzf/zoxide/starship widgets (shell/all) above; deferred init would have zvm
+# re-run after them and clobber their ZLE widgets.
+#
+# zvm_after_init MUST be defined before the source line: in sourcing mode zvm
+# runs its init (and calls this hook) during `source`, so a later definition is
+# never seen. zvm resets the keymap on init, wiping bindkeys made before it, so
+# this re-applies the omarchy-zsh ones that matter. (Tab also self-heals via
+# omarchy's precmd hook _omarchy-bind-tab-completion.)
+function zvm_after_init() {
+  bindkey '^I'   _omarchy-route-complete-or-expand 2>/dev/null
+  bindkey '^[[Z' reverse-menu-complete
+  bindkey '^[[A' history-search-backward
+  bindkey '^[[B' history-search-forward
+  (( $+widgets[fzf-history-widget]   )) && bindkey '^R'   fzf-history-widget
+  (( $+widgets[fzf-file-widget]      )) && bindkey '^T'   fzf-file-widget
+  (( $+widgets[fzf-cd-widget]        )) && bindkey '^[c'  fzf-cd-widget
+  (( $+widgets[fzf-git-log-widget]   )) && bindkey '^[^L' fzf-git-log-widget
+  (( $+widgets[fzf-variables-widget] )) && bindkey '^[^V' fzf-variables-widget
+}
+
+ZVM_INIT_MODE=sourcing
+source ~/.zsh/plugins/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Aliases (ported from zsh/zshrc, the cross-platform config -- see its header)
+# ---------------------------------------------------------------------------
+
+# Grep
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# ls
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Git
+alias gst='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gco='git checkout'
+alias gb='git branch'
+alias gr='git remote'
+alias gl='git log'
+alias gd='git diff'
+
+# Directory shortcuts
+alias dotfiles='cd ~/dotfiles'
+
+# Claude Code shortcuts
+alias cxc='claude -c --dangerously-skip-permissions' # extends omarchy 'cx'

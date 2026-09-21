@@ -1,3 +1,10 @@
+# Cross-platform zshrc (macOS/WSL) -- a standalone config, no framework, just
+# this file. On Omarchy/Linux, omarchy-zshrc is used instead: it layers on top
+# of the official omarchy-zsh package rather than reimplementing what it
+# already provides (eza/zoxide/mise/fzf wiring, tmux dev layouts, launchers).
+# install.sh picks between the two based on whether /usr/share/omarchy-zsh is
+# present. Keep the two in sync by hand where they overlap (aliases, prompt).
+
 # Homebrew (Apple Silicon)
 if [[ "$(uname)" == "Darwin" ]] && [ -x /opt/homebrew/bin/brew ]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"

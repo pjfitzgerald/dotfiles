@@ -188,7 +188,13 @@ if [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ]; then
   echo "Backing up existing .zshrc to .zshrc.bak"
   mv "$HOME/.zshrc" "$HOME/.zshrc.bak"
 fi
-ln -sf "$DOTFILES/zshrc" "$HOME/.zshrc"
+# Omarchy/Linux gets the omarchy-zsh-layered config; macOS/WSL get the
+# standalone one. See zsh/zshrc's header for why these are two files.
+if [ -f /usr/share/omarchy-zsh/shell/zoptions ]; then
+  ln -sf "$DOTFILES/zsh/omarchy-zshrc" "$HOME/.zshrc"
+else
+  ln -sf "$DOTFILES/zsh/zshrc" "$HOME/.zshrc"
+fi
 
 mkdir -p "$HOME/.config"
 
