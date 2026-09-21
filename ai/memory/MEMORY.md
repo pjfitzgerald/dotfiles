@@ -27,3 +27,15 @@
 - [reference_obsidian_vault.md](reference_obsidian_vault.md) — Obsidian vault access via symlink at ~/obsidian-vault (use Read/Write tools, not MCP)
 - [reference_obsidian_claude_moc.md](reference_obsidian_claude_moc.md) — Claude-related notes live in zettelkasten/, organized via the claude-obsidian MOC note (no folder)
 - [reference_dsfitz.md](reference_dsfitz.md) — dsfitz Synology NAS: SSH alias, /volume2/docker layout, tailnet, docker-compose v1, PUID 1026/100
+
+## Omarchy (Linux/Hyprland)
+- [syncthing-pkm-mesh.md](syncthing-pkm-mesh.md) — Syncthing setup syncing ~/pkm across omarchy, t480, pixel9a, mbp (folder id ztety-fltwy)
+- [omarchy-ssh-no-agent.md](omarchy-ssh-no-agent.md) — no ssh-agent in the Hyprland session; passphraseless key, plain ssh works
+- [hyprsunset-nightlight-schedule.md](hyprsunset-nightlight-schedule.md) — Omarchy night light = hyprsunset; schedule via time profiles in hyprsunset.conf + autostart; toggle is racy
+- [studio-display-omarchy-color.md](studio-display-omarchy-color.md) — Studio Display on Omarchy (AMD): deliberately on default sRGB (not cm=wide); HDR impossible per EDID, sdr* knobs inert
+- [inbound-ssh-tailnet.md](inbound-ssh-tailnet.md) — sshd keys-only + service exposure fixes on omarchy-1/t480; write-up in ~/pkm/SSH access across the tailnet.md
+- [via-hidraw-udev-omarchy.md](via-hidraw-udev-omarchy.md) — /etc/udev/rules.d/92-via.rules needs GROUP="input"; uaccess ACLs don't land
+- [kanata-home-row-mods.md](kanata-home-row-mods.md) — kanata user service on Omarchy; config at ~/.config/kanata/config.kbd, SUPER+F1 toggle; write-up in ~/pkm/zettelkasten/Home row mods on Omarchy.md
+- [btrfs-no-home-snapshots.md](btrfs-no-home-snapshots.md) — snapper covers / only; all subvols share one fs, so undelete needs a live USB
+- [zsa-voyager-udev-omarchy.md](zsa-voyager-udev-omarchy.md) — ZSA Voyager flashing on Omarchy: /etc/udev/rules.d/50-zsa.rules needs GROUP="input", not plugdev
+- [zsa-navigator-scroll-invert.md](zsa-navigator-scroll-invert.md) — ZSA Navigator trackball scroll inverted per-device in hypr/input.lua

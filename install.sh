@@ -267,7 +267,15 @@ ln -sf "$AI/AGENTS.md" "$HOME/AGENTS.md"
 # --- Claude Code -----------------------------------------------------------
 mkdir -p "$HOME/.claude"
 ln -sf  "$AI/AGENTS.md" "$HOME/.claude/CLAUDE.md"
-ln -sfn "$AI/skills"    "$HOME/.claude/skills"
+# NOT a whole-dir symlink: Omarchy pre-populates ~/.claude/skills with its own
+# default skills (diagnose-crash, omarchy), and Claude Code itself keeps a
+# synced/ runtime state dir there. Link each ai/skills/* individually instead,
+# so both coexist.
+mkdir -p "$HOME/.claude/skills"
+for skill_dir in "$AI"/skills/*/; do
+  [ -d "$skill_dir" ] || continue
+  ln -sfn "${skill_dir%/}" "$HOME/.claude/skills/$(basename "$skill_dir")"
+done
 ln -sfn "$AI/commands"  "$HOME/.claude/commands"
 ln -sfn "$AI/agents"    "$HOME/.claude/agents"
 ln -sfn "$AI/context"   "$HOME/.claude/hooks"
@@ -295,7 +303,10 @@ ln -sfn "$AI/agents"    "$HOME/.config/opencode/agent"
 ln -sf  "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 ln -sf  "$DOTFILES/opencode/tui.json"      "$HOME/.config/opencode/tui.json"
 
-# --- Codex (stub; not installed here yet) ----------------------------------
+# --- Codex -------------------------------------------------------------
+# Only wires AGENTS.md/prompts/config.toml -- leaves ~/.codex/skills alone
+# (Codex, like Claude Code, syncs its own system skills there; nothing in ai/
+# maps to it since Codex has no user skills system).
 mkdir -p "$HOME/.codex"
 ln -sf  "$AI/AGENTS.md" "$HOME/.codex/AGENTS.md"
 ln -sfn "$AI/commands"  "$HOME/.codex/prompts"

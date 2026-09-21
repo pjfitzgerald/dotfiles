@@ -16,6 +16,7 @@
     "frontend-design@claude-plugins-official": true
   },
   "tui": "fullscreen",
+  "theme": "dark",
   "voice": {
     "enabled": true,
     "mode": "hold"

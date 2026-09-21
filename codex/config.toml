@@ -5,8 +5,8 @@
 # user-level instructions from. Skills/commands: Codex has no skills system;
 # ~/.codex/prompts/*.md are its slash commands, symlinked from ai/commands/.
 #
-# STUB: codex is not installed on this machine yet. Fill in model/approval
-# settings on first use; MCP servers come from `ai/bin/sync-mcp.sh` output.
+# Model/approval settings still default (unset here) -- fill in when you want
+# to pin them explicitly. MCP servers come from `ai/bin/sync-mcp.sh` output.
 
 # model = "gpt-5-codex"
 # approval_policy = "on-request"

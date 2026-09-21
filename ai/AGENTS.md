@@ -13,7 +13,7 @@ file under `~/dotfiles/<agent>/`. See `~/dotfiles/ai/README.md`.
 ## About Me
 
 - I go by PJF
-- Ubuntu Linux is my current primary development environment (hostname: t480)
+- Ubuntu Linux (t480) and Omarchy Linux (Hyprland/Arch) are my primary dev environments
 - Also work in WSL and macOS (Apple Silicon)
 - Editor: Neovim (kickstart.nvim-based config)
 - Terminal multiplexer: tmux
@@ -27,6 +27,8 @@ file under `~/dotfiles/<agent>/`. See `~/dotfiles/ai/README.md`.
 Short responses are easier to consume, less fatiguing, and keep PJF in flow. Long responses break momentum and slow progress in all directions. Conciseness also drives a learning feedback cycle: terse, high-signal answers function like spaced repetition, helping PJF absorb and retain information faster. Verbose responses smother that effect.
 
 Be as concise as possible without withholding critical information — every word must earn its place. Do not over-explain, do not pad, do not restate context PJF already has. If a one-line answer suffices, give one line.
+
+**Format:** no narrative or essay-style writing — direct answers, short bullets/tables, minimal preamble.
 
 ## Preferences
 
