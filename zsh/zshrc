@@ -60,8 +60,8 @@ alias gr='git remote'
 alias gl='git log'
 alias gd='git diff'
 
-# Directory shortcuts (shared)
-alias dotfiles='cd ~/dotfiles'
+# Directory shortcuts (shared, tracked; aliases.local is sourced at the tail)
+source ~/dotfiles/zsh/aliases
 
 # Pull dotfiles changes from work machine and re-run install
 dotpull() {

@@ -1,0 +1,30 @@
+# Shared directory shortcuts -- sourced by both zsh/zshrc (cross-platform) and
+# zsh/omarchy-zshrc (Omarchy). Tracked in git so these travel between machines;
+# put machine-local or private aliases in ~/dotfiles/aliases.local instead
+# (gitignored, sourced after this file).
+#
+# The dev root differs per machine (~/code on Omarchy, ~/dev on t480/WSL), so
+# resolve it once here rather than hardcoding a path.
+
+for _d in "$HOME/code" "$HOME/dev"; do
+  [[ -d $_d ]] && { DEV_ROOT=$_d; break; }
+done
+unset _d
+: "${DEV_ROOT:=$HOME/code}"
+export DEV_ROOT
+
+alias dotfiles='cd ~/dotfiles'
+alias pkm='cd ~/pkm'
+alias devdir='cd "$DEV_ROOT"'
+alias projects='cd "$DEV_ROOT/projects"'
+
+# Individual projects
+alias revamp='cd "$DEV_ROOT/projects/revamp"'
+alias ptasks='cd "$DEV_ROOT/projects/ptasks"'
+alias ot='cd "$DEV_ROOT/projects/optimisedthought-com"'
+alias pfcom='cd "$DEV_ROOT/projects/pfitzgerald-com"'
+alias sgym='cd "$DEV_ROOT/projects/simple-gym"'
+alias tt='cd "$DEV_ROOT/projects/tennis-trade"'
+alias pbudget='cd "$DEV_ROOT/projects/pbudget"'
+alias jobhunt='cd "$DEV_ROOT/projects/jobhunt"'
+alias inv='cd "$DEV_ROOT/projects/inventory"'
