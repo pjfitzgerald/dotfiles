@@ -64,6 +64,15 @@ Board lists (the `lists/*.json` files) are pushed with the **`webeoc-lists`** CL
 - **GOTCHA: a bare `webeoc-lists pull` downloads _every_ list on the server into `lists/`** — ~100 untracked files, and it overwrites/reformats the handful of tracked ones. To verify a single pushed list, pull into a throwaway scratch dir (or just trust the push output + `webeoc-lists ls`), never a bare pull in the repo. If it happens: `git checkout -- lists/<tracked files>` then `git clean -fd lists/`.
 - Same caution as `weboard push`: it's a live mutation on the shared platform — ask / confirm `weboard dev` isn't running first.
 
+### Groups — `groups/` folder is the source of truth (`webeoc-groups`)
+
+Every client repo keeps its platform groups as `groups/<Group>.json` at the **repo root**, managed with the `webeoc-groups` CLI (`~/code/webeoc-groups`; if `webeoc-groups` isn't on PATH under the current nvm node, run `node ~/code/webeoc-groups/bin/webeoc-groups.js`).
+
+- **Seed / refresh**: run `webeoc-groups pull --output <scratch dir>` from the repo root (where `.env` lives), then copy ONLY this board's groups into `groups/`. Same gotcha as lists: a bare pull fetches every group on the shared instance (~70 on agvic's).
+- **Push** (`webeoc-groups push groups/<file> --overwrite --boards-dir boards`) is a live mutation — ask first, same as `weboard push`. `--overwrite` is NOT atomic: one rejected tag leaves the group with zero boards. Canary one group, then verify with a scratch-dir pull.
+- **Validation gotcha**: tag validation keys on the board export **directory name** (e.g. `agvic-ops`), but group files name the **platform board** (`AgVic Operations`), so push validation is silently skipped. Until the tool maps the two, check tags by hand against `webeoc-groups permissions --boards-dir boards`.
+- `test-push` / `merge-and-deploy` list `groups/*.json` changes as "needs PJF" and never push them.
+
 ### WebEOC date format — body locale attributes pattern
 
 For dd/mm/yyyy display in MDB datepicker (and all date-aware widgets) without breaking save round-trips:
