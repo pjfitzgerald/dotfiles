@@ -207,6 +207,8 @@ test together. `push` refuses an asset another stream claims (test → merge/rel
 refuses when dev changed an asset since the stream branched (pushing would revert dev's work live — have
 the stream `git merge dev` first). Tables and lists are listed, never pushed: PJF does those, before views.
 Pushing is pre-authorised in `--auto` mode; otherwise ask PJF. Either way the script checks `weboard dev`.
+All of this is dev only (the scripts unset inherited `WE_*` vars so `.env` wins). Test is
+`npm run push:test` in the repo, run by hand (it needs a typed confirmation at a TTY). Streams never run it.
 A full `weboard push` (whole board from dev) overwrites every claimed asset: re-run `test-push push <name>` for
 each stream in `test-push status` afterwards.
 

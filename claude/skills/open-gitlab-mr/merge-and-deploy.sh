@@ -123,7 +123,7 @@ test_steps() {
 ps -eo args | grep -qiE '^[^ ]*(node[^ ]* )?[^ ]*weboard[^ ]* dev( |$)' && die "weboard dev is running — not pushing"
 cd "$board_dir"
 for a in "${push[@]}"; do
-  out=$(weboard push "$a") || { echo "$out"; die "push failed: $a"; }
+  out=$(env $(compgen -v | sed -n "s/^WE_/-u WE_/p") -u INIT_CWD weboard push "$a") || { echo "$out"; die "push failed: $a"; }  # env -u: dev .env only, never inherited (e.g. Test) creds
   echo "$out" | grep -F "🟢" | grep -v "Logged out" || true
   echo "$out" | grep -qF "$a successfully pushed" || { echo "$out"; die "push of $a didn't report success"; }
 done

@@ -51,7 +51,7 @@ do_push() {
   local dir=$1; shift
   weboard_running && die "weboard dev is running — not pushing"
   for a in "$@"; do
-    out=$(cd "$dir" && weboard push "$a") || { echo "$out"; die "push failed: $a"; }
+    out=$(cd "$dir" && env $(compgen -v | sed -n "s/^WE_/-u WE_/p") -u INIT_CWD weboard push "$a") || { echo "$out"; die "push failed: $a"; }  # env -u: dev .env only, never inherited (e.g. Test) creds
     echo "$out" | grep -qF "$a successfully pushed" || { echo "$out"; die "push of $a didn't report success"; }
     echo "  pushed $a"
   done
