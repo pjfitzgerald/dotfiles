@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # merge-and-deploy.sh — the post-approval flow for a WebEOC board repo:
 #   merge the MR on GitLab → fast-forward the local target branch → targeted `weboard push` of every
-#   board asset the MR changed (one asset per call, from the board dir).
+#   board asset the MR changed, in any boards/<dir>/ (one asset per call, from its own board dir).
 #
 # Usage (run from the repo's MAIN checkout, on the MR's target branch):
 #   merge-and-deploy.sh <iid> [--board-dir <dir>] [--dry-run]
 #
-#   --board-dir  board directory containing board-displays/ etc. (default: the only boards/*/ dir)
+#   --board-dir  only deploy this board dir, e.g. boards/agvic-ops (default: every boards/*/ the MR touched)
 #   --dry-run    print what would be merged/pushed; change nothing
 #
 # Already-merged MRs skip the merge step. Stops (exit 1) without pushing when:
@@ -40,11 +40,10 @@ done
 root=$(git rev-parse --show-toplevel)
 [ "$(git rev-parse --path-format=absolute --git-common-dir)" = "$root/.git" ] || die "run from the main checkout"
 cd "$root"
-if [ -z "$board_dir" ]; then
-  dirs=(boards/*/); [ ${#dirs[@]} -eq 1 ] && [ -d "${dirs[0]}" ] || die "pass --board-dir (found: ${dirs[*]})"
-  board_dir=${dirs[0]%/}
+if [ -n "$board_dir" ]; then
+  board_dir=${board_dir%/}; board_dir=boards/${board_dir#boards/}
+  [ -d "$board_dir/board-displays" ] || die "$board_dir doesn't look like a board dir"
 fi
-[ -d "$board_dir/board-displays" ] || die "$board_dir doesn't look like a board dir"
 
 # 1. MR state → merge if needed
 status=$("$gl" status "$iid")            # !39 opened mergeable conflicts=false src→tgt
@@ -82,14 +81,16 @@ else die "can't find the merge commit for !$iid on origin/$target"; fi
 push=() res=() schema=() manual=()
 while IFS= read -r f; do
   case "$f" in groups/*.json) manual+=("$f (group — webeoc-groups push, non-atomic)"); continue ;; esac
-  rel=${f#"$board_dir"/}; [ "$rel" != "$f" ] || continue        # outside the board dir → not a platform asset
-  kind=${rel%%/*}; rest=${rel#*/}; name=${rest%%/*}
+  case "$f" in boards/*/*/*) ;; *) continue ;; esac               # outside a board dir → not a platform asset
+  [ -z "$board_dir" ] || [ "${f#"$board_dir"/}" != "$f" ] || continue
+  rel=${f#boards/}; dir=${rel%%/*}; rel=${rel#*/}
+  kind=${rel%%/*}; rest=${rel#*/}; name=${rest%%/*}; k="$dir/$name"   # key: <dir>/<asset>, as in test-push.sh
   case "$kind" in
-    board-resources) res+=("$name") ;;              # JS/CSS first, so views re-sync against them
+    board-resources) res+=("$k") ;;                 # JS/CSS first, so views re-sync against them
     board-displays|board-inputs)
-      case "$name" in "Util - Schema - "*) schema+=("$name") ;; *) push+=("$name") ;; esac ;;   # new columns first
-    board-tables) manual+=("$name (table schema change)") ;;
-    lists) manual+=("$rel (board list — webeoc-lists push)") ;;
+      case "$name" in "Util - Schema - "*) schema+=("$k") ;; *) push+=("$k") ;; esac ;;   # new columns first
+    board-tables) manual+=("$k (table schema change)") ;;
+    lists) manual+=("$dir/$rel (board list — webeoc-lists push)") ;;
   esac
 done < <(git diff --name-only "$base" "$head")
 mapfile -t res < <(printf '%s\n' "${res[@]}" | sort -u | sed '/^$/d')
@@ -121,11 +122,11 @@ test_steps() {
 
 # 4. targeted pushes
 ps -eo args | grep -qiE '^[^ ]*(node[^ ]* )?[^ ]*weboard[^ ]* dev( |$)' && die "weboard dev is running — not pushing"
-cd "$board_dir"
-for a in "${push[@]}"; do
-  out=$(env $(compgen -v | sed -n "s/^WE_/-u WE_/p") -u INIT_CWD weboard push "$a") || { echo "$out"; die "push failed: $a"; }  # env -u: dev .env only, never inherited (e.g. Test) creds
+for k in "${push[@]}"; do
+  a=${k#*/}
+  out=$(cd "boards/${k%%/*}" && env $(compgen -v | sed -n "s/^WE_/-u WE_/p") -u INIT_CWD weboard push "$a") || { echo "$out"; die "push failed: $k"; }  # env -u: dev .env only, never inherited (e.g. Test) creds
   echo "$out" | grep -F "🟢" | grep -v "Logged out" || true
-  echo "$out" | grep -qF "$a successfully pushed" || { echo "$out"; die "push of $a didn't report success"; }
+  echo "$out" | grep -qF "$a successfully pushed" || { echo "$out"; die "push of $k didn't report success"; }
 done
 [ ! -s "$slots" ] || [ ! -x "$tp" ] || "$tp" clear "${push[@]}"
 echo "deployed !$iid: ${#push[@]} asset(s)"
