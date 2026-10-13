@@ -32,7 +32,8 @@ shopt -s nullglob; boards=("$main"/boards/*/); shopt -u nullglob
 [ ${#boards[@]} -gt 0 ] || die "no boards/*/ dir in $main"
 for i in "${!boards[@]}"; do b=${boards[$i]%/}; boards[$i]=${b##*/}; done
 # Claims written before multi-board support have a bare asset name: with one board, prefix it.
-if [ ${#boards[@]} -eq 1 ] && awk -F'\t' '$1!~"/"{f=1} END{exit !f}' "$slots"; then
+if awk -F'\t' '$1!~"/"{f=1} END{exit !f}' "$slots"; then
+  [ ${#boards[@]} -eq 1 ] || die "$slots has pre-multi-board claims (no <dir>/) — prefix them by hand"
   tmp=$(mktemp); awk -F'\t' -v b="${boards[0]}" 'BEGIN{OFS="\t"} $1!~"/"{$1=b"/"$1} 1' "$slots" >"$tmp"; mv "$tmp" "$slots"
 fi
 # key "<dir>/<asset>" → board dir / asset name
@@ -97,7 +98,8 @@ case "$cmd" in
     [ ${#manual[@]} -eq 0 ] || printf 'needs PJF: %s\n' "${manual[@]}"
     [ ${#bad[@]} -eq 0 ] || { printf 'blocked: %s\n' "${bad[@]}" >&2; exit 1; }
     [ $dry -eq 0 ] || exit 0
-    for d in $(printf '%s\n' "${push[@]}" | cut -d/ -f1 | sort -u); do   # *.env is git-ignored
+    mapfile -t pdirs < <(printf '%s\n' "${push[@]}" | cut -d/ -f1 | sort -u)
+    for d in "${pdirs[@]}"; do   # *.env is git-ignored
       [ -e "$wt/boards/$d/.env" ] || ln -s "$main/boards/$d/.env" "$wt/boards/$d/.env"
     done
     do_push "$wt" "${push[@]}"
