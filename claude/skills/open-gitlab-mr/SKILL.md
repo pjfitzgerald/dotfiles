@@ -71,23 +71,16 @@ Helper: `~/.claude/skills/open-gitlab-mr/gitlab-mr.sh` (curl + jq; host/project 
 ## Views changed
 - `<asset>` (display | input | resource; mark NEW ones)
 
-## Push
-```bash
-cd boards/<board>
-weboard push "<resource>.js"     # resources first, then Util - Schema - *, then views
-weboard push "<view>"
-```
-Tables / lists / groups: name them here as separate manual steps (not weboard).
-
 ## How to test
 1. Position + incident, then numbered steps, each with the expected result. Keep it short.
 
 Card: <trello link>
 ````
 
-Keep the `## How to test` heading exactly: `merge-and-deploy.sh` replays that section after it deploys.
+Never add push instructions (`## Push` / `weboard push` blocks) to an MR. Keep the `## How to test` heading exactly: `merge-and-deploy.sh` replays that section after it deploys.
 
-**MRs are colleague-facing.** Call him **Patrick** (never "PJF"). The description covers ONLY what this MR
+**MRs are colleague-facing.** Never name the user (no "Patrick", "PJF" or any form of his name) in MR
+titles/descriptions, commits, repo files, GitLab comments or Teams notes; write neutrally ("run by hand"). The description covers ONLY what this MR
 changes: no "Out of scope" / "Follow-ups" / "Not done" sections, and no mention of related, deferred or future
 work. Those stay between Patrick and the orchestrator until there's an MR they apply to. Also no conversation
 context ("pending Patrick's decision", "as discussed", "per our chat", questions to him). Same rule for
