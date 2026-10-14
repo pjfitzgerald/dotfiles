@@ -208,7 +208,7 @@ refuses when dev changed an asset since the stream branched (pushing would rever
 the stream `git merge dev` first). Tables and lists are listed, never pushed: PJF does those, before views.
 Pushing is pre-authorised in `--auto` mode; otherwise ask PJF. Either way the script checks `weboard dev`.
 All of this is dev only (the scripts unset inherited `WE_*` vars so `.env` wins). Assets are keyed
-`<board dir>/<asset>`, so repos with several `boards/*/` work. Test is `npm run <abbr>-push:test -- "<asset>"`
+`<board dir>/<asset>`, so repos with several `boards/*/` work. Demo is `npm run <abbr>-push:demo -- "<asset>"`
 in the repo, run by PJF by hand (no confirmation prompt — a bare run pushes the whole board). Streams never run it.
 A full `weboard push` (whole board from dev) overwrites every claimed asset: re-run `test-push push <name>` for
 each stream in `test-push status` afterwards.
