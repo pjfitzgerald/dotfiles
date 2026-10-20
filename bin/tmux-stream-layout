@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# tmux-stream-layout — arrange a window as the orchestrator/stream layout (bound to prefix+A):
+#   +---------+-------------------+---------+
+#   |  shell  |  claude (50%)     |  nvim   |
+#   +---------+-------------------+---------+
+# Sides split the other 50% evenly. Same layout as start-orchestrator / delegate spawn-stream.sh.
+#
+# Usage: tmux-stream-layout [pane]
+#   pane   any pane in the target window (default: $TMUX_PANE, else the pane this process runs in,
+#          else the active pane of the most recent client).
+# The centre is the pane running claude (else the given pane). An existing nvim pane goes right and
+# another pane goes left; a missing one is created (nvim opens the dir's only *-scratch.md, if any).
+# Refuses windows with more than 3 panes.
+set -euo pipefail
+
+msg() { if [ -n "${_ARG:-}" ]; then tmux display-message "tmux-stream-layout: $*"; else echo "tmux-stream-layout: $*"; fi; }
+
+_ARG=${1:-}; pane=${1:-${TMUX_PANE:-}}
+if [ -z "$pane" ]; then
+  # Not started by tmux directly (e.g. a Claude Bash tool): find the pane whose process is our ancestor.
+  declare -A by_pid
+  while read -r pid id; do by_pid[$pid]=$id; done < <(tmux list-panes -a -F '#{pane_pid} #{pane_id}')
+  p=$$
+  while [ "$p" -gt 1 ] && [ -z "${by_pid[$p]:-}" ]; do p=$(ps -o ppid= -p "$p" | tr -d ' '); done
+  # Else (e.g. a detached/background session) use the active pane of the most recent client.
+  pane=${by_pid[$p]:-$(tmux display -p '#{pane_id}')}
+  [ -n "$pane" ] || { msg "no tmux pane found"; exit 1; }
+fi
+
+win=$(tmux display -p -t "$pane" '#{session_name}:#{window_index}')
+[ "$(tmux list-panes -t "$win" | wc -l)" -le 3 ] || { msg "window has more than 3 panes; tidy it first"; exit 1; }
+
+claude="" shell="" note=""
+while read -r id cmd; do
+  case "$cmd" in
+    claude) [ -z "$claude" ] && claude=$id ;;
+    nvim|vim) [ -z "$note" ] && note=$id ;;
+  esac
+done < <(tmux list-panes -t "$win" -F '#{pane_id} #{pane_current_command}')
+[ -n "$claude" ] || claude=$pane
+[ "$note" != "$claude" ] || note=""
+while read -r id; do
+  [ "$id" = "$claude" ] || [ "$id" = "$note" ] || [ -n "$shell" ] || shell=$id
+done < <(tmux list-panes -t "$win" -F '#{pane_id}')
+
+dir=$(tmux display -p -t "$claude" '#{pane_current_path}')
+if [ -z "$note" ]; then
+  scratch=$(cd "$dir" && compgen -G '*-scratch.md' || true)
+  [ "$(printf '%s\n' "$scratch" | grep -c .)" -eq 1 ] || scratch=""
+  note=$(tmux split-window -d -h -P -F '#{pane_id}' -t "$claude" -c "$dir")
+  sleep 0.3; tmux send-keys -t "$note" "nvim ${scratch:+'$scratch'}" Enter
+fi
+[ -n "$shell" ] || shell=$(tmux split-window -d -h -b -P -F '#{pane_id}' -t "$claude" -c "$dir")
+
+# even-horizontal keeps pane order: put shell first, claude second, nvim third.
+tmux select-layout -t "$win" even-horizontal
+set -- $(tmux list-panes -t "$win" -F '#{pane_id}')
+[ "$1" = "$shell" ] || tmux swap-pane -d -s "$shell" -t "$1"
+set -- $(tmux list-panes -t "$win" -F '#{pane_id}')
+[ "$2" = "$claude" ] || tmux swap-pane -d -s "$claude" -t "$2"
+tmux select-layout -t "$win" even-horizontal
+W=$(tmux display -p -t "$win" '#{window_width}'); C=$((W / 2))
+tmux resize-pane -t "$shell" -x $(((W - C - 2) / 2))
+tmux resize-pane -t "$claude" -x "$C"
+tmux select-pane -t "$claude"
+msg "$win laid out (shell $shell | claude $claude | nvim $note) — keybind: prefix+A"

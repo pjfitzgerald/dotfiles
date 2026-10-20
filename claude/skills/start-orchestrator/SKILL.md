@@ -36,7 +36,8 @@ Run from the repo's **main checkout** (not a worktree):
 
 Inside an existing orchestrator session, run with `--here` from the Claude pane's Bash tool. It treats
 `$TMUX_PANE` as the Claude column, reuses an existing shell and nvim pane (creating any that are missing),
-and arranges shell | Claude 50% | nvim. Refuses windows with more than 3 panes.
+and arranges shell | Claude 50% | nvim. Refuses windows with more than 3 panes. For any window (no repo
+needed), `prefix+A` or `/stream-layout` runs `~/dotfiles/bin/tmux-stream-layout`, which does the same.
 
 ## After it starts
 
