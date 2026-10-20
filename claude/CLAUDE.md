@@ -72,6 +72,9 @@ Every client repo keeps its platform groups as `groups/<Group>.json` at the **re
 - **Push** (`webeoc-groups push groups/<file> --overwrite --boards-dir boards`) is a live mutation — ask first, same as `weboard push`. `--overwrite` is NOT atomic: one rejected tag leaves the group with zero boards. Canary one group, then verify with a scratch-dir pull.
 - **Validation gotcha**: tag validation keys on the board export **directory name** (e.g. `agvic-ops`), but group files name the **platform board** (`AgVic Operations`), so push validation is silently skipped. Until the tool maps the two, check tags by hand against `webeoc-groups permissions --boards-dir boards`.
 - `test-push` / `merge-and-deploy` list `groups/*.json` changes as "needs PJF" and never push them.
+- **Drift check**: before and after any groups change, compare the env's live groups with the branch
+  (`webeoc-groups diff --dir groups --group-name <g>`, tag-order-insensitive). Any difference is **flagged to PJF**,
+  never resolved by assuming which side is right. Never push a group file without a fresh compare first.
 
 ### WebEOC date format — body locale attributes pattern
 
