@@ -1,15 +1,17 @@
 ---
 name: session-resume
-description: Orient at the start of a session by reading the Resume here block from the project's Obsidian hub note and surfacing Last session / Current focus / Next steps / Blockers to the user. Invoke when the user types /session-resume, /resume, "where did we leave off", "pick up where we left off", or at the start of any substantive session before diving into work. See ~/pkm/claude project hub note.md for the hub pattern.
+description: Orient at the start of a session by reading the Resume here block from the project's Obsidian hub note and surfacing Last session / Current focus / Next steps / Blockers to the user. Invoke when the user types /session-resume, /resume, "where did we leave off", "pick up where we left off", or at the start of any substantive session before diving into work. See <vault>/claude project hub note.md for the hub pattern.
 ---
 
 # Session resume ritual
 
-Orients the agent and the user at the start of a session using the Obsidian hub note. Only applies to projects following the hub-note pattern (see `~/pkm/claude project hub note.md`).
+Orients the agent and the user at the start of a session using the Obsidian hub note. Only applies to projects following the hub-note pattern (see `<vault>/claude project hub note.md`).
+
+`<vault>` is the Obsidian vault: `~/pkm` on Omarchy/t480/macOS, `~/obsidian-vault` on WSL. Resolve it by checking which exists.
 
 ## Steps
 
-1. **Locate the hub note.** Read the project's `AGENTS.md` (or `CLAUDE.md`) and find the "Long-term documentation hub" section — it names the exact path. If none is configured, tell the user the pattern isn't set up and suggest the bootstrap prompt in `~/pkm/claude project hub note.md`. Do not proceed.
+1. **Locate the hub note.** Read the project's `AGENTS.md` (or `CLAUDE.md`) and find the "Long-term documentation hub" section — it names the exact path. If none is configured, tell the user the pattern isn't set up and suggest the bootstrap prompt in `<vault>/claude project hub note.md`. Do not proceed.
 
 2. **Read the hub note.** Focus on the `# Resume here` block — that's the load-bearing part. Skim the rest only if the user's likely next request needs it.
 

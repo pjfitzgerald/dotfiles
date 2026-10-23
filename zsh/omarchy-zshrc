@@ -97,5 +97,11 @@ alias gd='git diff'
 source ~/dotfiles/zsh/aliases
 [ -f "$HOME/dotfiles/aliases.local" ] && source "$HOME/dotfiles/aliases.local"
 
+# Write each command to $HISTFILE as it's entered, not at shell exit. Matters when
+# a shell dies without a clean exit (tmux kill-pane, terminal window closed,
+# SIGKILL) — with plain APPEND_HISTORY that session's commands can be lost.
+# Kept in sync with zsh/zshrc.
+setopt INC_APPEND_HISTORY
+
 # Claude Code shortcuts
 alias cxc='claude -c --dangerously-skip-permissions' # extends omarchy 'cx'

@@ -20,6 +20,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
   fi
 fi
 
+# Detect WSL — kanata can't grab the physical keyboard from inside WSL2
+# (no access to the host's /dev/input), so its Linux setup is skipped there.
+IS_WSL=false
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  IS_WSL=true
+fi
+
 # Detect package manager
 if command -v brew &>/dev/null; then
   PKG_MANAGER="brew"
@@ -55,6 +62,11 @@ fi
 # Install fzf
 if ! command -v fzf &>/dev/null; then
   install_pkg fzf
+fi
+
+# Install jq (used by the bin/herdr-* helpers to read the herdr CLI's JSON)
+if ! command -v jq &>/dev/null; then
+  install_pkg jq
 fi
 
 # Install tmux
@@ -155,11 +167,59 @@ if [[ "$(uname)" == "Linux" ]] && ! command -v xclip &>/dev/null; then
   install_pkg xclip
 fi
 
+# Install kanata (cross-platform keyboard remapper; used for home row mods —
+# see kanata/kanata.kbd). Skipped under WSL: it can't reach the host keyboard
+# from there, so home row mods need a native Windows kanata setup instead.
+if ! command -v kanata &>/dev/null && [ "$IS_WSL" = false ]; then
+  if [ "$PKG_MANAGER" = "brew" ]; then
+    install_pkg kanata
+  elif [[ "$(uname)" == "Linux" ]]; then
+    if ! command -v unzip &>/dev/null; then
+      install_pkg unzip
+    fi
+    echo "Installing kanata..."
+    kanata_tmp=$(mktemp -d)
+    curl -fsSL -o "$kanata_tmp/kanata.zip" \
+      "https://github.com/jtroo/kanata/releases/latest/download/linux-binaries-x64.zip"
+    unzip -q "$kanata_tmp/kanata.zip" -d "$kanata_tmp"
+    mkdir -p "$HOME/.local/bin"
+    install -m 755 "$kanata_tmp/kanata_linux_x64" "$HOME/.local/bin/kanata"
+    rm -rf "$kanata_tmp"
+    echo "Installed kanata to ~/.local/bin/kanata (ensure ~/.local/bin is on PATH)."
+  fi
+fi
+
 # Install opencode (terminal AI coding agent; coexists with Claude Code).
 # Official installer drops the binary in ~/.opencode/bin.
 if ! command -v opencode &>/dev/null && [ ! -x "$HOME/.opencode/bin/opencode" ]; then
   echo "Installing opencode..."
   curl -fsSL https://opencode.ai/install | bash
+fi
+
+# Install herdr (terminal workspace manager for AI coding agents; coexists with
+# tmux -- see herdr/config.toml for the keybindings ported from tmux.conf).
+if ! command -v herdr &>/dev/null; then
+  if [ "$PKG_MANAGER" = "brew" ]; then
+    install_pkg herdr
+  elif [[ "$(uname)" == "Linux" ]]; then
+    # Direct release binary rather than `curl -fsSL https://herdr.dev/install.sh | sh`
+    # (the documented install): the work proxy blocks .sh downloads.
+    case "$(uname -m)" in
+      x86_64 | amd64) herdr_arch="x86_64" ;;
+      aarch64 | arm64) herdr_arch="aarch64" ;;
+      *) herdr_arch="" ;;
+    esac
+    if [ -n "$herdr_arch" ]; then
+      echo "Installing herdr..."
+      mkdir -p "$HOME/.local/bin"
+      curl -fsSL -o "$HOME/.local/bin/herdr" \
+        "https://github.com/herdrdev/herdr/releases/latest/download/herdr-linux-${herdr_arch}"
+      chmod +x "$HOME/.local/bin/herdr"
+      echo "Installed herdr to ~/.local/bin/herdr (ensure ~/.local/bin is on PATH)."
+    else
+      echo "Warning: no herdr release binary for $(uname -m); skipping."
+    fi
+  fi
 fi
 
 # Install zsh-syntax-highlighting
@@ -322,6 +382,72 @@ ln -sf "$DOTFILES/gemini/settings.json" "$HOME/.gemini/settings.json"
 
 # --- MCP servers -----------------------------------------------------------
 bash "$AI/bin/sync-mcp.sh" || echo "Warning: MCP sync failed; run ai/bin/sync-mcp.sh manually."
+
+# herdr config (keybindings ported from tmux -- see herdr/config.toml).
+# Symlink the FILE, not the directory: herdr also keeps its sockets, logs, and
+# session state in ~/.config/herdr, none of which belongs in this repo.
+mkdir -p "$HOME/.config/herdr"
+if [ -f "$HOME/.config/herdr/config.toml" ] && [ ! -L "$HOME/.config/herdr/config.toml" ]; then
+  echo "Backing up existing herdr config to ~/.config/herdr/config.toml.bak"
+  mv "$HOME/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml.bak.$(date +%s)"
+fi
+ln -sf "$DOTFILES/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+
+# herdr's Claude Code integration: a SessionStart hook that reports agent state
+# (idle / working / blocked / done) so herdr's sidebar tracks Claude accurately.
+# It writes ~/.claude/hooks/herdr-agent-state.sh and the hook entry in
+# ~/.claude/settings.json -- both symlinked into this repo, so the change lands
+# here as a tracked diff. Installed only when missing, to avoid rewriting
+# settings.json on every run.
+if command -v herdr &>/dev/null; then
+  if ! herdr integration status 2>/dev/null | grep -q '^claude: current'; then
+    herdr integration install claude
+  fi
+fi
+
+# kanata config (home row mods)
+mkdir -p "$HOME/.config/kanata"
+ln -sf "$DOTFILES/kanata/kanata.kbd" "$HOME/.config/kanata/kanata.kbd"
+
+# Linux (non-WSL): grant uinput access and register the systemd user service.
+# Adapted from https://github.com/jtroo/kanata/blob/main/docs/setup-linux.md
+if [[ "$(uname)" == "Linux" ]] && [ "$IS_WSL" = false ] && command -v kanata &>/dev/null; then
+  if ! getent group uinput &>/dev/null; then
+    sudo groupadd --system uinput
+  fi
+  sudo usermod -aG input "$(whoami)"
+  sudo usermod -aG uinput "$(whoami)"
+  sudo modprobe uinput
+  if [ ! -f /etc/udev/rules.d/99-input.rules ]; then
+    echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' | \
+      sudo tee /etc/udev/rules.d/99-input.rules >/dev/null
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+  fi
+
+  mkdir -p "$HOME/.config/systemd/user"
+  ln -sf "$DOTFILES/kanata/kanata.service" "$HOME/.config/systemd/user/kanata.service"
+  systemctl --user daemon-reload
+  systemctl --user enable kanata.service
+  echo "kanata.service installed. Log out/in (for the uinput group to take effect), then:"
+  echo "  systemctl --user start kanata.service"
+fi
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  echo ""
+  echo "kanata: manual steps still required on macOS —"
+  echo "  1. Install the Karabiner-DriverKit-VirtualHIDDevice driver (.pkg):"
+  echo "     https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases"
+  echo "  2. Approve it in System Settings > General > Login Items & Extensions > Driver Extensions."
+  echo "  3. To run kanata at boot, see kanata/dev.kanata.kanata.plist for the LaunchDaemon setup."
+fi
+
+if [ "$IS_WSL" = true ]; then
+  echo ""
+  echo "kanata: skipped Linux setup — this is WSL, which can't see the host keyboard."
+  echo "  Home row mods need a native Windows kanata.exe run on the Windows host instead."
+  echo "  See kanata/kanata.kbd for the config to use there."
+fi
 
 echo ""
 echo "Done! Open a new terminal to start using zsh."

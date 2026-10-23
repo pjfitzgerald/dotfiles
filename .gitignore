@@ -29,6 +29,16 @@ tmux/plugins/
 # Agent config: neutral sources plus per-agent adapters
 !ai/
 !ai/**
+
+# herdr config (keybindings ported from tmux)
+!herdr/
+!herdr/**
+
+# kanata config (home row mods)
+!kanata/
+!kanata/**
+
+# Per-agent adapters
 !claude/
 !claude/**
 !opencode/

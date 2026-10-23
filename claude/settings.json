@@ -1,12 +1,14 @@
 {
-  "model": "opus",
+  "model": "opus[1m]",
   "hooks": {
-    "UserPromptSubmit": [
+    "SessionStart": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/selfhost-context.sh"
+            "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
+            "timeout": 10
           }
         ]
       }
@@ -19,11 +21,12 @@
   "theme": "dark",
   "voice": {
     "enabled": true,
-    "mode": "hold"
+    "mode": "tap"
   },
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
   "verbose": false,
+  "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
   "voiceEnabled": true
 }

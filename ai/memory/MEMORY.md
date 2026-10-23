@@ -30,7 +30,7 @@
 - [inventory-cli-hermes.md](inventory-cli-hermes.md) — `inventory` CLI installed on omarchy-1 + Hermes `inventory-cli` skill; two unsynced prod DBs (t480 real, Railway empty)
 
 ## References
-- [reference_obsidian_vault.md](reference_obsidian_vault.md) — Obsidian vault access via symlink at ~/obsidian-vault (use Read/Write tools, not MCP)
+- [reference_obsidian_vault.md](reference_obsidian_vault.md) — vault path per machine (~/pkm, or ~/obsidian-vault on WSL); use file tools, not MCP
 - [reference_obsidian_claude_moc.md](reference_obsidian_claude_moc.md) — Claude-related notes live in zettelkasten/, organized via the claude-obsidian MOC note (no folder)
 - [reference_dsfitz.md](reference_dsfitz.md) — dsfitz Synology NAS: SSH alias, /volume2/docker layout, tailnet, docker-compose v1, PUID 1026/100
 

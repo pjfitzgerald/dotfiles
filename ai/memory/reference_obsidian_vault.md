@@ -1,19 +1,39 @@
 ---
 name: Obsidian vault access
-description: How to read/write to the user's Obsidian vault (juvare-pkm) from any project
+description: Where the Obsidian vault lives on each machine, and how to read/write it
 type: reference
 ---
 
-The user's Obsidian vault is at:
-- Real path: `/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm`
-- Symlink: `/home/patrickfitzgerald/obsidian-vault`
+The vault is the same content everywhere (Syncthing, folder id `ztety-fltwy`), but
+the path differs per machine — resolve it before use rather than assuming:
 
-**Always use the symlink path with standard `Read`/`Write`/`Glob` tools** — NOT the `mcp__obsidian-vault__*` tools.
+- **Omarchy (omarchy-1), t480, macOS:** `~/pkm` — a real directory.
+- **WSL / work:** `~/obsidian-vault` — a symlink to the OneDrive-synced Windows
+  vault at `/mnt/c/Users/patrick.fitzgerald/OneDrive - Juvare/Documents/juvare-pkm`.
+  **There is no `~/pkm` in WSL and there should never be one** — writing to
+  `~/pkm/...` there silently creates a stray local directory OneDrive never
+  syncs, so the note is effectively lost. If one appears, move its contents into
+  the vault and remove it.
 
-**Why:** The `@modelcontextprotocol/server-filesystem` MCP server implements the MCP roots protocol, which causes Claude Code to override the server's CLI-configured directory with the project CWD. This means the MCP tools are restricted to the project directory regardless of config. This is a known limitation as of 2026-03.
+**Read and write vault files with ordinary file tools at the resolved path** —
+NOT via an `mcp__obsidian-vault__*` filesystem MCP server.
 
-**Vault structure:**
-- `projects/active/` — active project notes
-- `01 daily-notes/`, `02 weekly-notes/` — journals
-- Root level has misc notes
-- Primarily uses 'maps of content' notes rather than directory organisation, with nearly all notes in the `zettelkasten` directory. For instance the `clients` file has links to clients which then have links and backlinks to client-related notes ie project MOCs/notes. For instance the `DPIRD Resource Management` note is the top level project note for the Resource Management board for the DPIRD client. Please follow this convention and read/write links more than assuming directory structure matters.
+**Why:** `@modelcontextprotocol/server-filesystem` implements the MCP roots
+protocol, which makes the client override the server's CLI-configured directory
+with the project CWD. So those tools end up restricted to the project directory
+regardless of config. Known limitation as of 2026-03.
+
+**Vault structure** differs between the two as well — check what exists instead
+of creating a folder from the other machine's scheme:
+
+- Personal (`~/pkm`): `projects/` (sub: `01 active`, `02 inactive`, `03 ideas`,
+  `04 archived`), `zettelkasten`, `daily notes`, `weekly notes`. Top-level
+  folders are NOT number-prefixed; only `projects/` subfolders are.
+- Work: `01 projects/01 active/`, `01 daily-notes/`, `02 weekly-notes/`,
+  `zettelkasten`, `reference`, `meetings`, `people`, `attachments`.
+
+Both are organised primarily by **maps of content** rather than directories —
+nearly all notes sit in `zettelkasten`, and e.g. the `clients` note links out to
+each client, which in turn links to that client's project MOCs. Follow links
+rather than assuming directory structure carries meaning. Related:
+[[reference_obsidian_claude_moc]], [[project_pkm_sync]].

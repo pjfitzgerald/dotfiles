@@ -184,7 +184,7 @@ vim.o.inccommand = 'split'
 vim.o.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.o.scrolloff = 10
+vim.o.scrolloff = 999
 
 -- PJF: Treesitter-based folding (e.g. folds markdown by heading, nested).
 -- Requires the relevant parser to be installed (:TSInstall <lang>).
@@ -207,14 +207,12 @@ end
 vim.o.confirm = true
 
 -- PJF: Use 2 spaces instead of tabs for HTML/JS/JSON files.
--- JS/JSON included because conform's format_on_save has no JS formatter, so it
--- falls back to LSP (ts_ls) formatting, which retabs the file using expandtab.
--- Without this, saving board .js files converts all leading spaces to tabs.
--- The React filetypes are separate from their plain counterparts -- a .tsx file
--- is 'typescriptreact', not 'typescript' -- so they have to be listed by name or
--- they keep the defaults (shiftwidth=8, noexpandtab) and the LSP retabs them.
--- A project with an .editorconfig sets these itself; this is the fallback for
--- the ones that don't have one.
+-- JS/JSON were included because conform's format_on_save had no JS formatter, so
+-- it fell back to LSP (ts_ls) formatting, which retabs the file using expandtab.
+-- Without this, saving board .js files converted all leading spaces to tabs.
+-- Conform now runs prettier on those filetypes (see formatters_by_ft below), so
+-- the fallback no longer applies to them -- but this still matters for html and
+-- xhtml, which have no formatter configured.
 vim.api.nvim_create_autocmd('FileType', {
   pattern = {
     'html',
@@ -358,16 +356,14 @@ vim.api.nvim_create_autocmd('User', {
 })
 
 -- PJF: standalone <CR> checkbox/list cycle for ALL markdown files, not just the
--- pkm vault. obsidian.nvim only wires its smart-action <CR> inside vault buffers
--- (via the `User ObsidianNoteEnter` handler in custom/plugins/obsidian.lua), so
--- outside the vault -- and any time that handler doesn't fire -- <CR> does nothing
--- special. This mirrors the vault's short cycle on the current line:
+-- pkm vault. obsidian.nvim only binds its smart-action <CR> inside vault buffers
+-- (see the BufEnter handler in the obsidian spec below), so outside the vault <CR>
+-- did nothing special. This mirrors the vault's short cycle on the current line:
 --   bare text -> '- ' dash -> '- [ ]' -> '- [x]' -> bare text
--- Layering: a buffer-local FileType=markdown map, set synchronously on load. This
--- autocmd is registered before require('lazy').setup below, so it runs before
--- lazy's ft loader; obsidian.nvim then loads and, for vault notes, re-maps <CR>
--- to the richer obsidian_cr (link/tag following on top) which wins. So this is
--- the baseline for every .md; obsidian_cr is the upgrade inside the vault.
+-- Layering: this is a buffer-local FileType=markdown map, set synchronously when
+-- the buffer loads. For vault buffers obsidian.nvim re-maps <CR> to obsidian_cr via
+-- vim.schedule (so it runs AFTER this and wins), adding link/tag following on top.
+-- So this is the base for every .md; obsidian_cr is the richer map inside the vault.
 local function markdown_cycle_line(line)
   local indent, rest
   -- '- [x] ...' (checked, any case) -> strip the marker back to bare text
@@ -394,10 +390,10 @@ local function markdown_cr()
   vim.api.nvim_set_current_line(markdown_cycle_line(vim.api.nvim_get_current_line()))
 end
 
--- Visual-mode counterpart: cycle every line in the selection. Reads the range
--- with line('v')/line('.') so the selection stays active and <CR> can be pressed
--- repeatedly to keep cycling. Blank lines are skipped so separators in a
--- multi-line selection don't become bullets.
+-- Visual-mode counterpart: cycle every line in the selection. Reads the range with
+-- line('v')/line('.') (rather than a helper that drops the selection) so the visual
+-- selection stays active and <CR> can be pressed repeatedly to keep cycling. Blank
+-- lines are skipped so separators in a multi-line selection don't become bullets.
 local function markdown_cr_visual()
   local s, e = vim.fn.line 'v', vim.fn.line '.'
   if s > e then
@@ -413,6 +409,8 @@ end
 
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'markdown',
+  -- Named augroup with clear=true so re-sourcing this file replaces the autocmd
+  -- instead of stacking another copy.
   group = vim.api.nvim_create_augroup('pjf-markdown-checkbox-cr', { clear = true }),
   callback = function(ev)
     vim.keymap.set('n', '<CR>', markdown_cr, { buffer = ev.buf, desc = 'Markdown: cycle checkbox / list state' })
@@ -446,6 +444,55 @@ rtp:prepend(lazypath)
 --    :Lazy update
 --
 
+-- PJF: unified C-hjkl navigation across nvim splits and the outer multiplexer's
+-- panes, in both tmux and herdr.
+--
+-- Under tmux, vim-tmux-navigator owns this: its tmux half binds C-hjkl with
+-- `bind -n`, checks whether the focused pane is running nvim, and forwards the
+-- keystroke here when it is. herdr has no conditional keybinding, so grabbing
+-- C-hjkl at the herdr level would cut nvim off from its own splits (and eat the
+-- shell's C-l / C-h). nvim drives it instead: move within nvim's splits first,
+-- and only when the cursor is already at the last split in that direction ask
+-- herdr to focus the neighbouring pane. Same keys, same feel, either way.
+--
+-- From a non-nvim pane (shell, agent) the herdr-level chords are ctrl+alt+hjkl
+-- or prefix+hjkl -- see herdr/config.toml.
+local herdr_directions = { h = 'left', j = 'down', k = 'up', l = 'right' }
+local tmux_commands = { h = 'Left', j = 'Down', k = 'Up', l = 'Right' }
+
+local function multiplexer_navigate(key)
+  if vim.env.HERDR_ENV ~= '1' then
+    return vim.cmd('TmuxNavigate' .. tmux_commands[key])
+  end
+  local from = vim.api.nvim_get_current_win()
+  vim.cmd.wincmd(key)
+  if vim.api.nvim_get_current_win() == from then
+    -- --current targets the calling pane via the HERDR_PANE_ID that herdr
+    -- injects into it; fire and forget, the focus change needs no reply.
+    vim.system { 'herdr', 'pane', 'focus', '--direction', herdr_directions[key], '--current' }
+  end
+end
+
+-- vim-tmux-navigator's "previous" jumps to the last tmux pane. herdr exposes no
+-- last-pane command over the CLI (only directional focus), so under herdr this
+-- degrades to nvim's own previous window; prefix+; / alt+; is the herdr-level
+-- last-pane bind.
+-- One prebuilt callback per direction, so the plugin spec's `keys` list below
+-- stays one short line per mapping.
+local multiplexer_nav = {}
+for key in pairs(herdr_directions) do
+  multiplexer_nav[key] = function()
+    multiplexer_navigate(key)
+  end
+end
+
+local function multiplexer_navigate_previous()
+  if vim.env.HERDR_ENV == '1' then
+    return vim.cmd.wincmd 'p'
+  end
+  vim.cmd 'TmuxNavigatePrevious'
+end
+
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
@@ -468,26 +515,6 @@ require('lazy').setup({
     opts = {},
   },
 
-  -- PJF: vim-tmux-navigator -- unified C-hjkl navigation across nvim splits and
-  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via TPM)
-  {
-    'christoomey/vim-tmux-navigator',
-    cmd = {
-      'TmuxNavigateLeft',
-      'TmuxNavigateDown',
-      'TmuxNavigateUp',
-      'TmuxNavigateRight',
-      'TmuxNavigatePrevious',
-      'TmuxNavigatorProcessList',
-    },
-    keys = {
-      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', desc = 'Navigate left (nvim split / tmux pane)' },
-      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', desc = 'Navigate down (nvim split / tmux pane)' },
-      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', desc = 'Navigate up (nvim split / tmux pane)' },
-      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', desc = 'Navigate right (nvim split / tmux pane)' },
-      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', desc = 'Navigate to previous split/pane' },
-    },
-  },
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -523,26 +550,26 @@ require('lazy').setup({
       },
     },
   },
-  -- PJF: start insertion
-  -- PJF: added github copilot plugin for AI code suggestions
-  {
-    'github/copilot.vim',
-    cmd = 'Copilot',
-    event = 'InsertEnter',
-    config = function()
-      -- (optional) don’t steal <Tab> from nvim-cmp/snippets
-      vim.g.copilot_no_tab_map = true
-      vim.g.copilot_assume_mapped = true
-
-      -- Accept suggestion with Ctrl+f, (this doesn't overwrite the default nvim c-f mapping to scroll down a full page as it's only mapped in insert mode)
-      vim.keymap.set('i', '<C-f>', 'copilot#Accept("\\<CR>")', {
-        expr = true,
-        replace_keycodes = false,
-        silent = true,
-        desc = 'Copilot accept',
-      })
-    end,
-  },
+  -- PJF: github copilot plugin DISABLED (commented out)
+  --   -- PJF: added github copilot plugin for AI code suggestions
+  --   {
+  --     'github/copilot.vim',
+  --     cmd = 'Copilot',
+  --     event = 'InsertEnter',
+  --     config = function()
+  --       -- (optional) don’t steal <Tab> from nvim-cmp/snippets
+  --       vim.g.copilot_no_tab_map = true
+  --       vim.g.copilot_assume_mapped = true
+  --
+  --       -- Accept suggestion with Ctrl+f, (this doesn't overwrite the default nvim c-f mapping to scroll down a full page as it's only mapped in insert mode)
+  --       vim.keymap.set('i', '<C-f>', 'copilot#Accept("\\<CR>")', {
+  --         expr = true,
+  --         replace_keycodes = false,
+  --         silent = true,
+  --         desc = 'Copilot accept',
+  --       })
+  --     end,
+  --   },
   -- PJF: end insertion
   --
   --
@@ -685,6 +712,8 @@ require('lazy').setup({
             '--column',
             '--smart-case',
             '--ignore-case',
+            -- PJF: search hidden dotfiles too (.git/ still excluded via file_ignore_patterns)
+            '--hidden',
           },
           -- mappings = {
           --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
@@ -1065,7 +1094,27 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        --
+        -- PJF: prettier for the filetypes ts_ls attaches to. Without these,
+        -- format_on_save falls through to lsp_format = 'fallback' and tsserver
+        -- reformats the whole buffer to ITS defaults -- no space in
+        -- "function ()", different chained-call indentation -- so a one-word
+        -- edit to a board .js file lands as a 485-line diff. Prettier is only
+        -- run when it resolves from the file's own directory upward, so this is
+        -- effectively scoped to projects that have it installed (the board
+        -- repos do, and they track a .prettierrc); elsewhere it still falls
+        -- back to the LSP as before.
+        --
+        -- prettierd is listed first but is not installed, so 'prettier' is what
+        -- actually runs. If prettierd is ever added, check it picks up the
+        -- project's prettier rather than its own bundled one -- a major-version
+        -- difference would reintroduce exactly the churn this fixes.
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        json = { 'prettierd', 'prettier', stop_after_first = true },
+        jsonc = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
@@ -1286,9 +1335,17 @@ require('lazy').setup({
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- PJF: vim-tmux-navigator -- unified C-hjkl navigation across nvim splits and
-  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via TPM)
+  -- tmux panes (replaces the old manual <C-w>hjkl maps; tmux half is wired via
+  -- TPM). Under herdr the plugin is not involved: multiplexer_navigate handles
+  -- the handoff itself via the herdr CLI.
   {
     'christoomey/vim-tmux-navigator',
+    -- The plugin installs its own <C-hjkl> maps on load, which would clobber the
+    -- `keys` maps below (and with them the herdr handoff and the insert-mode
+    -- variants) the moment lazy loads it. Let lazy own the mappings instead.
+    init = function()
+      vim.g.tmux_navigator_no_mappings = 1
+    end,
     cmd = {
       'TmuxNavigateLeft',
       'TmuxNavigateDown',
@@ -1298,11 +1355,13 @@ require('lazy').setup({
       'TmuxNavigatorProcessList',
     },
     keys = {
-      { '<c-h>', '<cmd>TmuxNavigateLeft<cr>', mode = { 'n', 'i' }, desc = 'Navigate left (nvim split / tmux pane)' },
-      { '<c-j>', '<cmd>TmuxNavigateDown<cr>', mode = { 'n', 'i' }, desc = 'Navigate down (nvim split / tmux pane)' },
-      { '<c-k>', '<cmd>TmuxNavigateUp<cr>', mode = { 'n', 'i' }, desc = 'Navigate up (nvim split / tmux pane)' },
-      { '<c-l>', '<cmd>TmuxNavigateRight<cr>', mode = { 'n', 'i' }, desc = 'Navigate right (nvim split / tmux pane)' },
-      { '<c-\\>', '<cmd>TmuxNavigatePrevious<cr>', mode = { 'n', 'i' }, desc = 'Navigate to previous split/pane' },
+      -- Routed through multiplexer_navigate (defined above lazy.setup) so the
+      -- same keys work under herdr, which needs nvim to drive the handoff.
+      { '<c-h>', multiplexer_nav.h, mode = { 'n', 'i' }, desc = 'Navigate left (nvim split / tmux-herdr pane)' },
+      { '<c-j>', multiplexer_nav.j, mode = { 'n', 'i' }, desc = 'Navigate down (nvim split / tmux-herdr pane)' },
+      { '<c-k>', multiplexer_nav.k, mode = { 'n', 'i' }, desc = 'Navigate up (nvim split / tmux-herdr pane)' },
+      { '<c-l>', multiplexer_nav.l, mode = { 'n', 'i' }, desc = 'Navigate right (nvim split / tmux-herdr pane)' },
+      { '<c-\\>', multiplexer_navigate_previous, mode = { 'n', 'i' }, desc = 'Navigate to previous split/pane' },
     },
   },
 
@@ -1326,7 +1385,11 @@ require('lazy').setup({
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
-  --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
+  --  Deliberately left commented out: every module in lua/custom/plugins/ is
+  --  `require`d explicitly above instead. Enabling this import as well loads
+  --  each of them a SECOND time, and lazy.nvim merges same-plugin specs -- the
+  --  resulting config-override shadowing is exactly how the visual checkbox
+  --  toggle silently broke once. See AGENTS.md "Neovim Config Structure".
   -- { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
