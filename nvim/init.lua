@@ -91,7 +91,15 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+-- PJF: on -- Omarchy's terminal configs (ghostty/kitty/alacritty/foot) all set
+-- JetBrainsMono Nerd Font, and the lualine setup below (matching Omarchy's
+-- default LazyVim statusline) expects icons the way LazyVim always does.
+vim.g.have_nerd_font = true
+
+-- PJF: LazyVim default -- gates the trouble.nvim symbols breadcrumb segment in
+-- the lualine setup (custom/plugins/lualine.lua). Disable per-buffer with
+-- vim.b.trouble_lualine = false.
+vim.g.trouble_lualine = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -346,6 +354,69 @@ vim.api.nvim_create_autocmd('User', {
   pattern = 'TelescopePreviewerLoaded',
   callback = function()
     vim.wo.wrap = true
+  end,
+})
+
+-- PJF: standalone <CR> checkbox/list cycle for ALL markdown files, not just the
+-- pkm vault. obsidian.nvim only wires its smart-action <CR> inside vault buffers
+-- (via the `User ObsidianNoteEnter` handler in custom/plugins/obsidian.lua), so
+-- outside the vault -- and any time that handler doesn't fire -- <CR> does nothing
+-- special. This mirrors the vault's short cycle on the current line:
+--   bare text -> '- ' dash -> '- [ ]' -> '- [x]' -> bare text
+-- Layering: a buffer-local FileType=markdown map, set synchronously on load. This
+-- autocmd is registered before require('lazy').setup below, so it runs before
+-- lazy's ft loader; obsidian.nvim then loads and, for vault notes, re-maps <CR>
+-- to the richer obsidian_cr (link/tag following on top) which wins. So this is
+-- the baseline for every .md; obsidian_cr is the upgrade inside the vault.
+local function markdown_cycle_line(line)
+  local indent, rest
+  -- '- [x] ...' (checked, any case) -> strip the marker back to bare text
+  indent, rest = line:match '^(%s*)%- %[[xX]%]%s?(.*)$'
+  if indent then
+    return indent .. rest
+  end
+  -- '- [ ] ...' (unchecked) -> checked
+  indent, rest = line:match '^(%s*)%- %[ %]%s?(.*)$'
+  if indent then
+    return indent .. '- [x] ' .. rest
+  end
+  -- '- ...' (dash list item, no checkbox) -> unchecked checkbox
+  indent, rest = line:match '^(%s*)%- (.*)$'
+  if indent then
+    return indent .. '- [ ] ' .. rest
+  end
+  -- bare line -> dash list item
+  indent, rest = line:match '^(%s*)(.*)$'
+  return indent .. '- ' .. rest
+end
+
+local function markdown_cr()
+  vim.api.nvim_set_current_line(markdown_cycle_line(vim.api.nvim_get_current_line()))
+end
+
+-- Visual-mode counterpart: cycle every line in the selection. Reads the range
+-- with line('v')/line('.') so the selection stays active and <CR> can be pressed
+-- repeatedly to keep cycling. Blank lines are skipped so separators in a
+-- multi-line selection don't become bullets.
+local function markdown_cr_visual()
+  local s, e = vim.fn.line 'v', vim.fn.line '.'
+  if s > e then
+    s, e = e, s
+  end
+  for lnum = s, e do
+    local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, false)[1]
+    if line and line:match '%S' then
+      vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, true, { markdown_cycle_line(line) })
+    end
+  end
+end
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'markdown',
+  group = vim.api.nvim_create_augroup('pjf-markdown-checkbox-cr', { clear = true }),
+  callback = function(ev)
+    vim.keymap.set('n', '<CR>', markdown_cr, { buffer = ev.buf, desc = 'Markdown: cycle checkbox / list state' })
+    vim.keymap.set('v', '<CR>', markdown_cr_visual, { buffer = ev.buf, desc = 'Markdown: cycle checkbox / list state (visual)' })
   end,
 })
 
@@ -1119,7 +1190,9 @@ require('lazy').setup({
     end,
   },
 
-  -- PJF: bamboo theme
+  -- PJF: bamboo theme -- kept installed (Omarchy's "Osaka Jade" theme selects
+  -- it) but no longer forced. The active colorscheme now follows the current
+  -- Omarchy theme via `require 'custom.plugins.omarchy-theme'` further down.
   {
     'ribru17/bamboo.nvim',
     lazy = false,
@@ -1131,7 +1204,6 @@ require('lazy').setup({
           ['@markup.link.label'] = { underline = false },
         },
       }
-      vim.cmd 'silent colorscheme bamboo'
     end,
   },
 
@@ -1159,17 +1231,19 @@ require('lazy').setup({
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
-      local statusline = require 'mini.statusline'
+      -- PJF: commented out to test -- with this disabled, nvim falls back to
+      -- its own built-in statusline (laststatus=2 is still set above).
+      -- local statusline = require 'mini.statusline'
       -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      -- statusline.setup { use_icons = vim.g.have_nerd_font }
 
       -- You can configure sections in the statusline by overriding their
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
+      -- statusline.section_location = function()
+      --   return '%2l:%-2v'
+      -- end
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -1202,7 +1276,9 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
+  -- PJF: enabled -- provides nvim-dap, which the lualine DAP status segment
+  -- (custom/plugins/lualine.lua) checks for.
+  require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
@@ -1231,6 +1307,21 @@ require('lazy').setup({
   },
 
   require 'custom.plugins.obsidian',
+
+  -- PJF: follow the current Omarchy theme instead of a hard-coded colorscheme
+  require 'custom.plugins.omarchy-theme',
+
+  -- PJF: statusline segment sources -- Snacks.nvim (profiler status + the
+  -- Snacks.util.color() helper), noice.nvim (command/mode indicators), and
+  -- trouble.nvim (LSP symbols breadcrumb). Loaded before lualine below, which
+  -- is what actually renders their segments.
+  require 'custom.plugins.snacks',
+  require 'custom.plugins.noice',
+  require 'custom.plugins.trouble',
+
+  -- PJF: lualine.nvim, matching Omarchy's default LazyVim statusline (replaces
+  -- mini.statusline, disabled above)
+  require 'custom.plugins.lualine',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
