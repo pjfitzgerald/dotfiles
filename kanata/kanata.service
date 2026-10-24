@@ -5,7 +5,7 @@ Documentation=https://github.com/jtroo/kanata
 [Service]
 Environment=PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:%h/.local/bin
 Type=simple
-ExecStart=/bin/sh -c 'exec kanata --cfg %h/.config/kanata/kanata.kbd --no-wait'
+ExecStart=/bin/sh -c 'exec kanata --cfg %h/.config/kanata/config.kbd --no-wait'
 Restart=on-failure
 RestartSec=3
 

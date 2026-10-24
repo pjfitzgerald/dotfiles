@@ -1,0 +1,96 @@
+;; Linked by install.sh to ~/.config/kanata/config.kbd.
+;;
+;; The filename is config.kbd, not kanata.kbd: the systemd unit and the macOS
+;; LaunchDaemon plist both pass --cfg explicitly, and this name is what the
+;; already-running unit on omarchy loads. Renaming it would mean restarting
+;; kanata (and losing home-row mods mid-session) for no gain.
+
+;; Home row mods — kanata "advanced" style (typing-friendly)
+;; Based on: https://github.com/jtroo/kanata/blob/main/cfg_samples/home-row-mod-advanced.kbd
+;;
+;; Tap a home row key  -> normal letter (resolved instantly on same-hand keys)
+;; Hold a home row key  -> modifier
+;;
+;; Outside-in modifier order:
+;;   a / ;  = Shift
+;;   s / l  = Ctrl
+;;   d / k  = Alt
+;;   f / j  = Super (Meta / GUI)
+;;
+;; Caps Lock is remapped straight to Ctrl.
+;;
+;; Panic exit (physical keys, before remap): Left Ctrl + Space + Esc
+
+(defcfg
+  process-unmapped-keys yes
+  ;; Let two home-row mods be held/resolved at once (rolls like "sd", "kl").
+  concurrent-tap-hold yes
+  ;; Don't grab mouse-like devices (the MX Vertical).
+  linux-device-detect-mode keyboard-only
+  ;; Don't crash if no keyboard is present at startup (e.g. BT not yet
+  ;; paired); keep running and grab it when it appears.
+  linux-continue-if-no-devs-found yes
+  ;; --- device pinning (fill in after running `sudo kanata --list`) ---
+  ;; Once you know which single node carries your letters, uncomment and set:
+  ;; linux-dev-names-include (
+  ;;   "PFU Limited HHKB-Hybrid Keyboard"
+  ;; )
+)
+
+(defsrc
+  caps a s d f j k l ;
+)
+
+(defvar
+  ;; tap-time: max ms between taps of the SAME key to count as key-repeat.
+  ;; hold-time: hold at least this long (with no same-hand key) for the mod.
+  ;;   Lower hold-time  = snappier mods, more accidental mods while typing.
+  ;;   Raise  hold-time = safer typing, mods need a longer deliberate press.
+  tap-time 200
+  hold-time 190
+
+  ;; Rolling onto a key on the SAME hand = you're typing -> instant tap.
+  ;; Chording a mod with the OTHER hand still works as a hold.
+  left-hand-keys  (
+    q w e r t
+    a s d f g
+    z x c v b
+  )
+  right-hand-keys (
+    y u i o p
+    h j k l ;
+    n m , . /
+  )
+)
+
+;; Base layer: home row keys are the tap-hold aliases.
+(deflayer base
+  lctl @a @s @d @f @j @k @l @;
+)
+
+;; After any home row TAP we jump here so a fast follow-up never mods.
+;; on-idle-fakekey returns to base once you pause ~20ms.
+(deflayer nomods
+  lctl a s d f j k l ;
+)
+
+(deffakekeys
+  to-base (layer-switch base)
+)
+
+(defalias
+  tap (multi
+    (layer-switch nomods)
+    (on-idle-fakekey to-base tap 20)
+  )
+
+  ;; outside-in: shift / ctrl / alt / super
+  a (tap-hold-release-keys $tap-time $hold-time (multi a @tap) lsft $left-hand-keys)
+  s (tap-hold-release-keys $tap-time $hold-time (multi s @tap) lctl $left-hand-keys)
+  d (tap-hold-release-keys $tap-time $hold-time (multi d @tap) lalt $left-hand-keys)
+  f (tap-hold-release-keys $tap-time $hold-time (multi f @tap) lmet $left-hand-keys)
+  j (tap-hold-release-keys $tap-time $hold-time (multi j @tap) rmet $right-hand-keys)
+  k (tap-hold-release-keys $tap-time $hold-time (multi k @tap) ralt $right-hand-keys)
+  l (tap-hold-release-keys $tap-time $hold-time (multi l @tap) rctl $right-hand-keys)
+  ; (tap-hold-release-keys $tap-time $hold-time (multi ; @tap) rsft $right-hand-keys)
+)

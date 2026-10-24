@@ -20,6 +20,28 @@ file under `~/dotfiles/<agent>/`. See `~/dotfiles/ai/README.md`.
 - Shell: zsh
 - Dotfiles repo: ~/dotfiles
 
+## Dotfiles layout — edit the repo, not ~/.config
+
+`~/dotfiles` is the source of truth; `~/.config` holds only symlinks into it
+(created by `install.sh`). Editing a live config therefore edits the repo — that
+is intended. A config that is a *real file* in `~/.config` has drifted out of
+the repo; bring it back rather than editing it in place.
+
+- Per-machine variants are two files in the repo, picked by `$IS_OMARCHY` in
+  `install.sh`: `<name>` for macOS/WSL, `omarchy-<name>` for Omarchy (`zsh/`,
+  `kitty/`, `ghostty/`). Omarchy's terminal configs carry a
+  `~/.local/state/omarchy/current/theme/...` import that the mac ones lack —
+  never link a mac config on Omarchy.
+- Omarchy-only, no mac counterpart: `alacritty/`, `foot/`, `hypr/`.
+- `~/.config/hypr/monitors.lua` is machine-local and deliberately untracked.
+  Don't add it to the repo.
+- `.gitignore` is deny-by-default (`*` then whitelists). A new config dir needs
+  a whitelist entry or it is silently untracked.
+- Link whole directories only where we own every file (`nvim/`, `tmux/`); use
+  per-file symlinks where another tool also writes there (`hypr/`, `herdr/`,
+  `~/.claude/skills/`).
+- Full write-up: `<vault>/zettelkasten/dotfiles.md`.
+
 ## Conciseness — strictly enforced
 
 **Concise responses are strictly better than verbose ones. This is non-negotiable.**

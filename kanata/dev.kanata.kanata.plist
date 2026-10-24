@@ -18,7 +18,7 @@
     <array>
         <string>/opt/homebrew/bin/kanata</string>
         <string>-c</string>
-        <string>REPLACE_WITH_HOME/.config/kanata/kanata.kbd</string>
+        <string>REPLACE_WITH_HOME/.config/kanata/config.kbd</string>
     </array>
 
     <key>UserName</key>

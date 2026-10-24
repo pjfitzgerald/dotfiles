@@ -59,6 +59,23 @@ ai/skills/terminal-browser
 !kitty/
 !kitty/**
 
+# Alacritty / foot terminal configs (Omarchy only)
+!alacritty/
+!alacritty/**
+!foot/
+!foot/**
+
+# Hyprland personal overrides (Omarchy only).
+# monitors.lua is per-machine (output names, scale, panel quirks) -- left
+# untracked on purpose; see hypr/hyprland.lua's header.
+!hypr/
+!hypr/**
+hypr/monitors.lua
+
+# Backups install.sh leaves behind when it replaces a real file with a symlink
+**/*.bak
+**/*.bak.*
+
 # Ignore nvim artifacts and nested git
 nvim/.git/
 nvim/.git.bak/

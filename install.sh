@@ -1,6 +1,34 @@
 #!/bin/bash
 # Sets up dotfiles and installs dependencies.
 # Expects the repo to live at ~/dotfiles
+#
+# Layout and conventions
+# ----------------------
+# This repo is the source of truth; ~/.config (and ~ for the few files that
+# still insist on living there) holds only symlinks back into it. Nothing is
+# copied, so editing a live config edits the repo and `git status` is an honest
+# answer to "what have I changed on this machine?".
+#
+# Per-machine variants: where a config genuinely cannot be shared, the repo
+# keeps two files and this script picks one, rather than branching the repo or
+# templating. The pattern is `<name>` for macOS/WSL and `omarchy-<name>` for
+# Omarchy:
+#
+#   zsh/zshrc          <-> zsh/omarchy-zshrc        (omarchy-zsh layering)
+#   kitty/kitty.conf   <-> kitty/omarchy-kitty.conf (theme include)
+#   ghostty/config     <-> ghostty/omarchy-config   (theme include)
+#
+# Omarchy-only configs (no mac/WSL counterpart) are linked only when
+# $IS_OMARCHY: alacritty/, foot/, hypr/.
+#
+# Genuinely machine-local files are left untracked and untouched -- currently
+# ~/.config/hypr/monitors.lua. Don't "fix" that by adding it.
+#
+# Directory symlink vs per-file symlink: link the whole directory only when we
+# own every file in it (nvim/, tmux/). Where another tool also writes into the
+# directory -- Omarchy into ~/.config/hypr, herdr its sockets and logs, kanata
+# nothing but the daemon reads alongside -- link individual files instead, or
+# the other tool's files vanish.
 
 set -e
 
@@ -25,6 +53,16 @@ fi
 IS_WSL=false
 if grep -qi microsoft /proc/version 2>/dev/null; then
   IS_WSL=true
+fi
+
+# Detect Omarchy. Several configs (zsh, the terminals, hypr) have an
+# Omarchy-specific variant in this repo; this flag is what selects them.
+# The marker is omarchy-zsh's shell lib rather than /etc/os-release, because
+# what matters is that Omarchy's own config layer is installed, not that this
+# happens to be Arch.
+IS_OMARCHY=false
+if [ -f /usr/share/omarchy-zsh/shell/zoptions ]; then
+  IS_OMARCHY=true
 fi
 
 # Detect package manager
@@ -250,7 +288,7 @@ if [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ]; then
 fi
 # Omarchy/Linux gets the omarchy-zsh-layered config; macOS/WSL get the
 # standalone one. See zsh/zshrc's header for why these are two files.
-if [ -f /usr/share/omarchy-zsh/shell/zoptions ]; then
+if [ "$IS_OMARCHY" = true ]; then
   ln -sf "$DOTFILES/zsh/omarchy-zshrc" "$HOME/.zshrc"
 else
   ln -sf "$DOTFILES/zsh/zshrc" "$HOME/.zshrc"
@@ -284,7 +322,11 @@ if [ -e "$GHOSTTY_DIR/config" ] && [ ! -L "$GHOSTTY_DIR/config" ]; then
   echo "Backing up existing ghostty config to config.bak"
   mv "$GHOSTTY_DIR/config" "$GHOSTTY_DIR/config.bak.$(date +%s)"
 fi
-ln -sf "$DOTFILES/ghostty/config" "$GHOSTTY_DIR/config"
+if [ "$IS_OMARCHY" = true ]; then
+  ln -sf "$DOTFILES/ghostty/omarchy-config" "$GHOSTTY_DIR/config"
+else
+  ln -sf "$DOTFILES/ghostty/config" "$GHOSTTY_DIR/config"
+fi
 if [ -e "$GHOSTTY_DIR/config.ghostty" ]; then
   echo "Note: $GHOSTTY_DIR/config.ghostty exists and is ignored by Ghostty; delete it."
 fi
@@ -298,9 +340,48 @@ if [ -e "$KITTY_DIR/kitty.conf" ] && [ ! -L "$KITTY_DIR/kitty.conf" ]; then
   echo "Backing up existing kitty config to kitty.conf.bak"
   mv "$KITTY_DIR/kitty.conf" "$KITTY_DIR/kitty.conf.bak.$(date +%s)"
 fi
-ln -sf "$DOTFILES/kitty/kitty.conf" "$KITTY_DIR/kitty.conf"
+if [ "$IS_OMARCHY" = true ]; then
+  ln -sf "$DOTFILES/kitty/omarchy-kitty.conf" "$KITTY_DIR/kitty.conf"
+else
+  ln -sf "$DOTFILES/kitty/kitty.conf" "$KITTY_DIR/kitty.conf"
+fi
 if [[ "$(uname)" == "Darwin" ]] && [ -e "$HOME/Library/Preferences/kitty/kitty.conf" ]; then
   echo "Note: ~/Library/Preferences/kitty/kitty.conf exists and shadows $KITTY_DIR/kitty.conf; delete it."
+fi
+
+# Omarchy-only desktop configs: alacritty, foot, and the hypr overrides.
+# None of these have a macOS/WSL counterpart, so they are skipped entirely
+# elsewhere rather than linked to something that would not be read.
+if [ "$IS_OMARCHY" = true ]; then
+  # Alacritty (Omarchy's default terminal) and foot.
+  for pair in "alacritty/alacritty.toml:alacritty/alacritty.toml" \
+              "foot/foot.ini:foot/foot.ini"; do
+    src="$DOTFILES/${pair%%:*}"
+    dest="$HOME/.config/${pair##*:}"
+    mkdir -p "$(dirname "$dest")"
+    if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+      echo "Backing up existing $(basename "$dest") to $(basename "$dest").bak"
+      mv "$dest" "$dest.bak.$(date +%s)"
+    fi
+    ln -sf "$src" "$dest"
+  done
+
+  # Hyprland personal overrides. Per-file, and monitors.lua is skipped on
+  # purpose -- it is per-machine. See hypr/hyprland.lua's header.
+  mkdir -p "$HOME/.config/hypr"
+  for src in "$DOTFILES"/hypr/*; do
+    name="$(basename "$src")"
+    dest="$HOME/.config/hypr/$name"
+    if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+      echo "Backing up existing hypr/$name to $name.bak"
+      mv "$dest" "$dest.bak.$(date +%s)"
+    fi
+    ln -sf "$src" "$dest"
+  done
+  if [ ! -e "$HOME/.config/hypr/monitors.lua" ]; then
+    echo "Note: no ~/.config/hypr/monitors.lua on this machine. Hyprland will"
+    echo "  use Omarchy's monitor defaults; write a machine-local one if needed."
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -407,7 +488,7 @@ fi
 
 # kanata config (home row mods)
 mkdir -p "$HOME/.config/kanata"
-ln -sf "$DOTFILES/kanata/kanata.kbd" "$HOME/.config/kanata/kanata.kbd"
+ln -sf "$DOTFILES/kanata/config.kbd" "$HOME/.config/kanata/config.kbd"
 
 # Linux (non-WSL): grant uinput access and register the systemd user service.
 # Adapted from https://github.com/jtroo/kanata/blob/main/docs/setup-linux.md
@@ -446,7 +527,7 @@ if [ "$IS_WSL" = true ]; then
   echo ""
   echo "kanata: skipped Linux setup — this is WSL, which can't see the host keyboard."
   echo "  Home row mods need a native Windows kanata.exe run on the Windows host instead."
-  echo "  See kanata/kanata.kbd for the config to use there."
+  echo "  See kanata/config.kbd for the config to use there."
 fi
 
 echo ""

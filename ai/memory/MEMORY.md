@@ -12,6 +12,7 @@
 - [projects-dir-convention.md](projects-dir-convention.md) — code projects live in ~/code/projects/, not ~/dev or ~/Projects
 
 ## Projects
+- [dotfiles-config-symlinks.md](dotfiles-config-symlinks.md) — ~/dotfiles is source of truth, ~/.config is symlinks; omarchy-<name> variants picked by $IS_OMARCHY
 - [project_vimarchy.md](project_vimarchy.md) — vimarchy (was homerow-omarchy): Homerow-style hint clicker for Hyprland; repo ~/code/projects/vimarchy, AT-SPI SCREEN coords broken, a11y bus off by default, cursor via hl.dsp.cursor.move
 - [project_pkm_sync.md](project_pkm_sync.md) — PKM syncs via Syncthing (folder ID ztety-fltwy) + git; .git excluded from Syncthing
 - [project_homelab.md](project_homelab.md) — selfhosting inventory: dsfitz NAS (storage, RAM-constrained) + t480 (always-on compute); app-on-t480/data-on-NAS-via-NFS pattern
