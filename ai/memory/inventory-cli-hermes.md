@@ -32,10 +32,12 @@ Hooked into Hermes as a local skill at `~/.hermes/skills/inventory-cli/SKILL.md`
   from `kind-magic`), then `railway variable list --service Postgres --json`
   for `DATABASE_PUBLIC_URL` and psql straight in. No SSH key is registered on
   omarchy-1, so `railway ssh` doesn't work there.
-- Login returning `Invalid email or password` means wrong password, not a
-  missing account — the API returns that same string for both, but an
-  unverified email gets a distinct 403 instead. The two prods have separate
-  `users` tables, so passwords differ between them.
+- `Invalid email or password` from the CLI while the **web app accepts the
+  same credentials** (seen 2026-10-26, confirmed in `railway logs --service
+  api`: CLI 401s, browser 200 OK, same account, digest unchanged since July)
+  means the shell mangled the argument — zsh expands `!` and `$` before the
+  CLI sees it. `cli/inventory` now prompts for the password when
+  `--password` is omitted; don't pass it in argv.
 - As of 2026-10-23 the CLI was not logged in on omarchy-1 and Hermes had no
   inference provider configured (`hermes -z` errors out).
 - Docs: `~/pkm/projects/01 active/inventory/inventory -- cli usage.md`.
