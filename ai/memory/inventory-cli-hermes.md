@@ -17,13 +17,12 @@ Hooked into Hermes as a local skill at `~/.hermes/skills/inventory-cli/SKILL.md`
 - The skill is named `inventory-cli`, not `inventory` — a community clawhub
   skill owns the name `inventory` and `hermes skills inspect inventory`
   resolves to that one instead.
-- Two prod deployments, **separate and unsynced** databases. Railway
-  (`https://inventory.optimisedthought.com/api/v1`) is the CLI's built-in
-  default and holds the real data — 721 items, 709 under
-  `patrick.fitzgerald29@gmail.com` (verified 2026-10-23 against its Postgres;
-  older notes calling it "empty" are stale). t480 over Tailscale
-  (`https://inventory.astrapia-degree.ts.net/api/v1`) is the other, diverged
-  copy, and t480 is often offline.
+- **Railway is the only production** (`https://inventory.optimisedthought.com/api/v1`,
+  the CLI's built-in default): ~721 items, 709 under
+  `patrick.fitzgerald29@gmail.com`. The T480 prod stack was decommissioned
+  2026-10-26 (final dump + stack archive in `~/srv/backups/inventory/` on the
+  T480, deregistered from `~/srv/ops/apps.conf`); only **staging** remains
+  there. Older notes describing two prods are stale.
 - **Railway runs `origin/master`, which lags the dev branch**: no shared
   inventories, no recycle bin, no `sublocation`, and `delete` there is a
   **hard, unrecoverable delete**. Don't trust the CLI's own `--help` about

@@ -29,6 +29,7 @@
 - [jellyfin-dsfitz.md](jellyfin-dsfitz.md) — Jellyfin runs on **t480** (`~/jellyfin`), not dsfitz; libraries, and the NAS `0700` dir-permission gotcha that silently hides media
 - [immich-go-dsfitz.md](immich-go-dsfitz.md) — upload NAS folders to Immich via immich-go on dsfitz: binary path, server/key, folder-as-album, SSH gotchas
 - [inventory-cli-hermes.md](inventory-cli-hermes.md) — `inventory` CLI installed on omarchy-1 + Hermes `inventory-cli` skill; two unsynced prod DBs (t480 real, Railway empty)
+- [t480-tailscale-loggedout.md](t480-tailscale-loggedout.md) — t480 is logged out of Tailscale (2026-10-26); reach it at 192.168.8.228, a failed ping/ssh doesn't mean it's down
 
 ## References
 - [railway-custom-domain-acme.md](railway-custom-domain-acme.md) — add DNS before attaching a Railway custom domain; the ACME failure caches per hostname for days
