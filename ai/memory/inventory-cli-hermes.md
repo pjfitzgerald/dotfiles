@@ -40,4 +40,9 @@ Hooked into Hermes as a local skill at `~/.hermes/skills/inventory-cli/SKILL.md`
   `--password` is omitted; don't pass it in argv.
 - As of 2026-10-23 the CLI was not logged in on omarchy-1 and Hermes had no
   inference provider configured (`hermes -z` errors out).
+- Name-addressed editing works via `inventory find WORDS...` (ranked fuzzy
+  local search over a 10-min cache in `~/.cache/inventory`), then
+  `inventory update <id>`; `--add-tags`/`--remove-tags` and a merging
+  `--field` avoid clobbering. Added 2026-10-26, unpushed. Don't feed the
+  whole item list to an agent: 244 KB JSON / 34 KB compact for 709 items.
 - Docs: `~/pkm/projects/01 active/inventory/inventory -- cli usage.md`.
