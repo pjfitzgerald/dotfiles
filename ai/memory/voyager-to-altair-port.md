@@ -16,6 +16,9 @@ the `.bin`. Flashing that `.bin` to the Altair is not the ask (different board) 
 "flash the Voyager layout" means transplanting the keymap via VIA.
 
 **How to apply:** dump the board to `~/Documents/altair_x.<date>-preport.json`
-first — it's the rollback. Full write-up, geometry table and gotchas (7 layers
-vs the Altair's 6; `0x7700-0x7FFF` keycodes can't cross) in
+first — it's the rollback. Oryx **macros** arrive as dead `QK_USER` keycodes and
+fail silently; recover what they were from Oryx's public GraphQL API
+(`https://oryx.zsa.io/graphql`, hashId + revisionId are in the .bin filename),
+then reinstate with `--set L:IDX=KC`. Full write-up, geometry table and other
+gotchas (7 layers vs the Altair's 6; `0x7700-0x7FFF` can't cross) in
 `~/pkm/Altair-X mod-taps and VIA on Omarchy.md`. See [[via-hidraw-udev-omarchy]].
