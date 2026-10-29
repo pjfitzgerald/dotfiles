@@ -44,6 +44,7 @@
 - [hyprsunset-nightlight-schedule.md](hyprsunset-nightlight-schedule.md) — Omarchy night light = hyprsunset; schedule via time profiles in hyprsunset.conf + autostart; toggle is racy
 - [studio-display-omarchy-color.md](studio-display-omarchy-color.md) — Studio Display on Omarchy (AMD): deliberately on default sRGB (not cm=wide); HDR impossible per EDID, sdr* knobs inert
 - [inbound-ssh-tailnet.md](inbound-ssh-tailnet.md) — sshd keys-only + service exposure fixes on omarchy-1/t480; write-up in ~/pkm/SSH access across the tailnet.md
+- [voyager-to-altair-port.md](voyager-to-altair-port.md) — port an Oryx layout onto the Altair-X straight out of the compiled .bin; `voyager-port-to-altair` + `altair-{dump,load}-keymap`
 - [via-hidraw-udev-omarchy.md](via-hidraw-udev-omarchy.md) — /etc/udev/rules.d/92-via.rules needs GROUP="input"; uaccess ACLs don't land
 - [kanata-home-row-mods.md](kanata-home-row-mods.md) — kanata user service on Omarchy; config at ~/.config/kanata/config.kbd, SUPER+F1 toggle; write-up in ~/pkm/zettelkasten/Home row mods on Omarchy.md
 - [btrfs-no-home-snapshots.md](btrfs-no-home-snapshots.md) — snapper covers / only; all subvols share one fs, so undelete needs a live USB
